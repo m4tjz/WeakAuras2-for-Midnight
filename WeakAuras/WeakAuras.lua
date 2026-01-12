@@ -4289,7 +4289,7 @@ end
 function Private.ParseTooltipText(tooltipText)
   local debuffType = "none";
   local tooltipSize = {};
-  if(tooltipText) then
+  if not issecretvalue(tooltipText) and (tooltipText) then -- [MIDNIGHT EDIT] checking for secret values.
     for t in tooltipText:gmatch("(-?%d[%d%.,]*)") do
       if (LARGE_NUMBER_SEPERATOR == ",") then
         t = t:gsub(",", "");
@@ -5308,6 +5308,7 @@ local function ValueForSymbol(symbol, region, customCache, regionState, regionSt
 end
 
 function Private.ReplacePlaceHolders(textStr, region, customCache, useHiddenStates, formatters)
+  if issecretvalue(textStr) then return textStr end -- [MIDNIGHT EDIT] checking for secret values.
   local regionValues = region.values;
   local regionState = region.state or {};
   local regionStates = region.states or {};
@@ -5331,7 +5332,7 @@ function Private.ReplacePlaceHolders(textStr, region, customCache, useHiddenStat
         textStr = tostring(value);
       end
     end
-    textStr = textStr:gsub("\\n", "\n");
+    textStr = issecretvalue(textStr) and textStr or textStr:gsub("\\n", "\n"); -- [MIDNIGHT EDIT] checking for secret values.
     return textStr;
   end
 
@@ -5387,7 +5388,7 @@ function Private.ReplacePlaceHolders(textStr, region, customCache, useHiddenStat
     result = result .. "%"
   end
 
-  textStr = result:gsub("\\n", "\n");
+  textStr = issecretvalue(result) and result or result:gsub("\\n", "\n"); -- [MIDNIGHT EDIT] checking for secret values.
   return textStr;
 end
 
@@ -5826,11 +5827,11 @@ function Private.ensurePRDFrame()
       end
       personalRessourceDisplayFrame.texture:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\PRDFrameKui");
     else
-      local namePlateVerticalScale = tonumber(GetCVar("NamePlateVerticalScale"));
+      local namePlateVerticalScale = 1--tonumber(GetCVar("NamePlateVerticalScale")); -- [MIDNIGHT EDIT] removed CVar.
       local zeroBasedScale = namePlateVerticalScale - 1.0;
       local clampedZeroBasedScale = Saturate(zeroBasedScale);
-      local horizontalScale = tonumber(GetCVar("NamePlateHorizontalScale"));
-      local baseNamePlateWidth = NamePlateDriverFrame.baseNamePlateWidth;
+      local horizontalScale = 1--tonumber(GetCVar("NamePlateHorizontalScale")); -- [MIDNIGHT EDIT] removed CVar.
+      local baseNamePlateWidth = 128--NamePlateDriverFrame.baseNamePlateWidth; -- [MIDNIGHT EDIT] removed value.
       prdWidth = baseNamePlateWidth * horizontalScale * Lerp(1.1, 1.0, clampedZeroBasedScale) - 24;
       prdHeight = 4 * namePlateVerticalScale * Lerp(1.2, 1.0, clampedZeroBasedScale) * 2  + 1;
       personalRessourceDisplayFrame:SetScale(1 / UIParent:GetEffectiveScale());
@@ -6208,6 +6209,7 @@ local textSymbols = {
 ---@param txt string
 ---@return string result
 function WeakAuras.ReplaceRaidMarkerSymbols(txt)
+  if issecretvalue(txt) then return txt end -- [MIDNIGHT EDIT] checking for secret values.
   local start = 1
 
   while true do
@@ -6230,6 +6232,7 @@ function WeakAuras.ReplaceRaidMarkerSymbols(txt)
 end
 
 function Private.ReplaceLocalizedRaidMarkers(txt)
+  if issecretvalue(txt) then return txt end -- [MIDNIGHT EDIT] checking for secret values.
   local start = 1
 
   while true do
@@ -6262,7 +6265,7 @@ end
 --- @return boolean?
 function Private.UnitPlayerControlledFixed(unit)
   local guid = UnitGUID(unit)
-  return guid and guid:sub(1, 6) == "Player"
+  return issecretvalue(guid) and guid and guid:sub(1, 6) == "Player" -- [MIDNIGHT EDIT] checking for secret values.
 end
 
 do

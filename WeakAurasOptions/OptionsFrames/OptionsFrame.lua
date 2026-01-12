@@ -510,21 +510,24 @@ function OptionsPrivate.CreateFrame()
   local footerSpacing = 4
   local thanksListCJ = lineWrapDiscordList(OptionsPrivate.Private.DiscordListCJ)
   local thanksListK = lineWrapDiscordList(OptionsPrivate.Private.DiscordListK)
-
-  local discordButton = addFooter(L["Discord"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
-            L["Chat with WeakAuras experts on our Discord server."])
-  discordButton:SetParent(tipFrame)
-  discordButton:SetPoint("LEFT", tipFrame, "LEFT")
-
-  local documentationButton = addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
-            L["Check out our wiki for a large collection of examples and snippets."])
-  documentationButton:SetParent(tipFrame)
-  documentationButton:SetPoint("LEFT", discordButton, "RIGHT", footerSpacing, 0)
-
-  local thanksButton = addFooter(L["Thanks"], [[Interface\AddOns\WeakAuras\Media\Textures\waheart.tga]],
-                                 "https://www.patreon.com/WeakAuras", thanksList, thanksListCJ, thanksListK, nil, 800)
-  thanksButton:SetParent(tipFrame)
-  thanksButton:SetPoint("LEFT", documentationButton, "RIGHT", footerSpacing, 0)
+  
+  -- [MIDNIGHT EDIT] removed button.
+--  local discordButton = addFooter(L["Discord"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
+--            L["Chat with WeakAuras experts on our Discord server."])
+--  discordButton:SetParent(tipFrame)
+--  discordButton:SetPoint("LEFT", tipFrame, "LEFT")
+  
+  -- [MIDNIGHT EDIT] removed button.
+--  local documentationButton = addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
+--            L["Check out our wiki for a large collection of examples and snippets."])
+--  documentationButton:SetParent(tipFrame)
+--  documentationButton:SetPoint("LEFT", discordButton, "RIGHT", footerSpacing, 0)
+  
+  -- [MIDNIGHT EDIT] removed button.
+--  local thanksButton = addFooter(L["Thanks"], [[Interface\AddOns\WeakAuras\Media\Textures\waheart.tga]],
+--                                 "https://www.patreon.com/WeakAuras", thanksList, thanksListCJ, thanksListK, nil, 800)
+--  thanksButton:SetParent(tipFrame)
+--  thanksButton:SetPoint("LEFT", documentationButton, "RIGHT", footerSpacing, 0)
 
   if OptionsPrivate.changelog then
     local changelog
@@ -539,24 +542,44 @@ function OptionsPrivate.CreateFrame()
     changelogButton:SetParent(tipFrame)
     changelogButton:SetPoint("LEFT", thanksButton, "RIGHT", footerSpacing, 0)
   end
+  
+  -- [MIDNIGHT EDIT] new button.
+  local noHelpButton1 = addFooter("|cffff0000UNOFFICIAL VERSION|r", [[Interface\Addons\WeakAuras\PowerAurasMedia\Auras\Aura118]], "https://www.google.com/",
+            "A PATCHWORK UPDATE MADE BY A RANDOM GUY.\n\nEXPECT BUGS, ERRORS, AND CRASHES.")
+  noHelpButton1:SetParent(tipFrame)
+  noHelpButton1:SetPoint("LEFT", tipFrame, "LEFT")
+  
+  -- [MIDNIGHT EDIT] new button.
+  local noHelpButton2 = addFooter("|cffff0000THERE IS NO SUPPORT|r", [[Interface\Addons\WeakAuras\PowerAurasMedia\Auras\Aura118]], "https://www.google.com/",
+            "THINGS CAN AND WILL BREAK.\n\nDON'T EXPECT A SOLUTION FROM ANYONE.")
+  noHelpButton2:SetParent(tipFrame)
+  noHelpButton2:SetPoint("LEFT", noHelpButton1, "RIGHT", footerSpacing, 0)
+  
+  -- [MIDNIGHT EDIT] new button.
+  local noHelpButton3 = addFooter("|cffff0000DON'T BOTHER ANYONE|r", [[Interface\Addons\WeakAuras\PowerAurasMedia\Auras\Aura118]], "https://www.google.com/",
+            "I MEAN IT...\n\nIF SOMETHING DOESN'T WORK, IT DOESN'T WORK.")
+  noHelpButton3:SetParent(tipFrame)
+  noHelpButton3:SetPoint("LEFT", noHelpButton2, "RIGHT", footerSpacing, 0)
 
-  local reportbugButton = addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new?template=bug_report.yml",
-            L["Report bugs on our issue tracker."], nil, nil, true)
+  local reportbugButton = addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://youtu.be/dQw4w9WgXcQ", -- [MIDNIGHT EDIT] replaced the link with something useful.
+            "Try to solve it with the link below.", nil, nil, true) -- [MIDNIGHT EDIT] there is no support for this AddOn.
   reportbugButton:SetParent(tipFrame)
   reportbugButton:SetPoint("RIGHT", tipFrame, "RIGHT")
-
-  local wagoButton = addFooter(L["Find Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wago.tga]], "https://wago.io",
-            L["Browse Wago, the largest collection of auras."], nil, nil, true)
-  wagoButton:SetParent(tipFrame)
-  wagoButton:SetPoint("RIGHT", reportbugButton, "LEFT", -footerSpacing, 0)
-
-  local companionButton
-  if not OptionsPrivate.Private.CompanionData.slugs then
-    companionButton = addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
-            L["Keep your Wago imports up to date with the Companion App."])
-    companionButton:SetParent(tipFrame)
-    companionButton:SetPoint("RIGHT", wagoButton, "LEFT", -footerSpacing, 0)
-  end
+  
+  -- [MIDNIGHT EDIT] removed button.
+--  local wagoButton = addFooter(L["Find Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wago.tga]], "https://wago.io",
+--            L["Browse Wago, the largest collection of auras."], nil, nil, true)
+--  wagoButton:SetParent(tipFrame)
+--  wagoButton:SetPoint("RIGHT", reportbugButton, "LEFT", -footerSpacing, 0)
+  
+  -- [MIDNIGHT EDIT] removed button.
+--  local companionButton
+--  if not OptionsPrivate.Private.CompanionData.slugs then
+--    companionButton = addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
+--            L["Keep your Wago imports up to date with the Companion App."])
+--    companionButton:SetParent(tipFrame)
+--    companionButton:SetPoint("RIGHT", wagoButton, "LEFT", -footerSpacing, 0)
+--  end
 
   frame.ShowTip = function(self)
     self.tipFrame:Show()
