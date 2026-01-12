@@ -612,7 +612,7 @@ local funcs = {
   end,
   UpdateValue = function(self)
     local progress = 1
-    if(self.total > 0) then
+    if not issecretvalue(self.value) and not issecretvalue(self.total) and (self.total > 0) then -- [MIDNIGHT EDIT] checking for secret values.
       progress = self.value / self.total;
       if self.inverseDirection then
         progress = 1 - progress;

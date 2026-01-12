@@ -121,7 +121,7 @@ if WeakAuras.IsRetail() then
     or event == "UNIT_SPELLCAST_EMPOWER_UPDATE"
     or (
       (Private.player_target_events[event])
-      and (select(10, UnitChannelInfo(unit)) or 0) > 0  -- 10th arg of UnitChannelInfo is numStages for empowered spells
+      and not issecretvalue(UnitChannelInfo(unit)) and (select(10, UnitChannelInfo(unit)) or 0) > 0  -- 10th arg of UnitChannelInfo is numStages for empowered spells
     )
     then
       cacheEmpowered[unit] = {GetUnitEmpowerHoldAtMaxTime(unit), UnitChannelInfo(unit)}
@@ -952,7 +952,7 @@ Private.tinySecondFormat = function(value)
 end
 
 function Private.ExecEnv.ParseStringCheck(input)
-  if not input then return end
+  if issecretvalue(input) or not input then return end -- [MIDNIGHT EDIT] checking for secret values.
   local matcher = {
     entries = {},
     negativeEntries = {},
@@ -960,15 +960,16 @@ function Private.ExecEnv.ParseStringCheck(input)
       return false
     end,
     CheckBoth = function(self, e)
-      return self.entries[e] and not self.negativeEntries[e]
+      return not issecretvalue(e) and self.entries[e] and not self.negativeEntries[e] -- [MIDNIGHT EDIT] checking for secret values.
     end,
     CheckPositive = function(self, e)
-      return self.entries[e]
+      return not issecretvalue(e) and self.entries[e] -- [MIDNIGHT EDIT] checking for secret values.
     end,
     CheckNegative = function(self, e)
-      return not self.negativeEntries[e]
+      return not issecretvalue(e) and not self.negativeEntries[e] -- [MIDNIGHT EDIT] checking for secret values.
     end,
     Add = function(self, e, negate)
+	  if issecretvalue(e) then return end -- [MIDNIGHT EDIT] checking for secret values.
       if negate then
         self.negativeEntries[e] = true
       else
@@ -1017,7 +1018,7 @@ end
 ---@param val string
 ---@return boolean result
 function WeakAuras.ValidateNumericOrPercent(info, val)
-  if val ~= nil and val ~= "" then
+  if not issecretvalue(val) and val ~= nil and val ~= "" then -- [MIDNIGHT EDIT] checking for secret values.
     local index = val:find("%% *$")
     local number = index and tonumber(val:sub(1, index-1)) or tonumber(val)
     if(not number or number >= 2^31) then
@@ -2584,7 +2585,7 @@ Private.event_prototypes = {
         store = true,
         hidden = true,
         test = "true",
-        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+        init = "not issecretvalue(raidMarkIndex) and raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''" -- [MIDNIGHT EDIT] checking for secret values.
       },
       {
         name = "dead",
@@ -2682,7 +2683,7 @@ Private.event_prototypes = {
         type = "string",
         multiline = true,
         store = true,
-        init = "select(6, strsplit('-', UnitGUID(unit) or ''))",
+        init = "(issecretvalue(UnitCreatureID(unit)) and '0' or tostring(UnitCreatureID(unit)))",--"select(6, strsplit('-', UnitGUID(unit) or ''))", [MIDNIGHT EDIT] adding new API.
         conditionType = "string",
         preamble = "local npcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
         test = "npcIdChecker:Check(npcId)",
@@ -3338,7 +3339,7 @@ Private.event_prototypes = {
         name = "percenthealth",
         display = L["Health (%)"],
         type = "number",
-        init = "total ~= 0 and (value / total) * 100 or nil",
+        init = "UnitHealthPercent(unit,false,CurveConstants.ScaleTo100)", -- [MIDNIGHT EDIT] adding the new API.
         store = true,
         conditionType = "number",
         multiEntry = {
@@ -3351,7 +3352,7 @@ Private.event_prototypes = {
         name = "deficit",
         display = L["Health Deficit"],
         type = "number",
-        init = "total - value",
+        init = "UnitHealthMissing(unit)", -- [MIDNIGHT EDIT] adding the new API.
         store = true,
         conditionType = "number",
         multiEntry = {
@@ -3511,7 +3512,7 @@ Private.event_prototypes = {
         type = "string",
         multiline = true,
         store = true,
-        init = "select(6, strsplit('-', UnitGUID(unit) or ''))",
+        init = "(issecretvalue(UnitCreatureID(unit)) and '0' or tostring(UnitCreatureID(unit)))",--"select(6, strsplit('-', UnitGUID(unit) or ''))", [MIDNIGHT EDIT] adding new API.
         conditionType = "string",
         preamble = "local npcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
         test = "npcIdChecker:Check(npcId)",
@@ -3587,7 +3588,7 @@ Private.event_prototypes = {
         store = true,
         hidden = true,
         test = "true",
-        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+        init = "not issecretvalue(raidMarkIndex) and raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''" -- [MIDNIGHT EDIT] checking for secret values.
       },
       {
         type = "header",
@@ -3674,7 +3675,7 @@ Private.event_prototypes = {
         name = L["Absorb"],
         func = function(trigger, state)
           local absorb = state.absorb
-          if not absorb then
+          if not absorb or issecretvalue(absorb) then -- [MIDNIGHT EDIT] checking for secret values.
             return
           end
           if (trigger.absorbMode == "OVERLAY_FROM_START") then
@@ -3700,7 +3701,7 @@ Private.event_prototypes = {
         name = L["Heal Absorb"],
         func = function(trigger, state)
           local healabsorb = state.healabsorb
-          if not healabsorb then
+          if not healabsorb or issecretvalue(healabsorb) then -- [MIDNIGHT EDIT] checking for secret values.
             return
           end
           if (trigger.absorbHealMode == "OVERLAY_FROM_START") then
@@ -3850,9 +3851,10 @@ Private.event_prototypes = {
             local total = math.max(1, UnitPowerMax(unit, powerType))
           ]]))
         else
+		  -- [MIDNIGHT EDIT] checking for secret values.
           table.insert(ret, [[
             local power = UnitPower(unit, powerType)
-            local total = math.max(1, UnitPowerMax(unit, powerType))
+            local total = issecretvalue(UnitPowerMax(unit, powerType)) and UnitPowerMax(unit, powerType) or math.max(1, UnitPowerMax(unit, powerType))
           ]])
         end
       elseif WeakAuras.IsMists() and powerType == 99 then
@@ -3886,16 +3888,17 @@ Private.event_prototypes = {
 
       local canEnableShowCost = (not trigger.use_powertype or trigger.powertype ~= 99) and trigger.unit == "player";
       if (canEnableShowCost and trigger.use_showCost) then
+	    -- [MIDNIGHT EDIT] checking for secret values.
         table.insert(ret, [[
           if (event == "UNIT_DISPLAYPOWER") then
             local cost = WeakAuras.GetSpellCost(powerTypeToCheck)
-            if state.cost ~= cost then
+            if issecretvalue(state.cost) or issecretvalue(cost) or state.cost ~= cost then
               state.cost = cost
               state.changed = true
             end
           elseif ( (event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_FAILED" or event == "UNIT_SPELLCAST_SUCCEEDED") and unit == "player") or event == "WA_UNIT_QUEUED_SPELL_CHANGED" then
             local cost = WeakAuras.GetSpellCost(powerTypeToCheck)
-            if state.cost ~= cost then
+            if issecretvalue(state.cost) or issecretvalue(cost) or state.cost ~= cost then
               state.cost = cost
               state.changed = true
             end
@@ -4037,7 +4040,7 @@ Private.event_prototypes = {
         name = "percentpower",
         display = L["Power (%)"],
         type = "number",
-        init = "total ~= 0 and (value / total) * 100 or nil",
+        init = "UnitPowerPercent(unit,powerType,false,CurveConstants.ScaleTo100)", -- [MIDNIGHT EDIT] adding the new API.
         store = true,
         conditionType = "number",
         multiEntry = {
@@ -4050,7 +4053,7 @@ Private.event_prototypes = {
         name = "deficit",
         display = L["Power Deficit"],
         type = "number",
-        init = "total - value",
+        init = "(issecretvalue(value) or issecretvalue(total)) and 0 or total - value", -- [MIDNIGHT EDIT] checking for secret values.
         store = true,
         conditionType = "number",
         multiEntry = {
@@ -4115,7 +4118,7 @@ Private.event_prototypes = {
         type = "string",
         multiline = true,
         store = true,
-        init = "select(6, strsplit('-', UnitGUID(unit) or ''))",
+        init = "(issecretvalue(UnitCreatureID(unit)) and '0' or tostring(UnitCreatureID(unit)))",--"select(6, strsplit('-', UnitGUID(unit) or ''))", [MIDNIGHT EDIT] adding new API.
         conditionType = "string",
         preamble = "local npcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
         test = "npcIdChecker:Check(npcId)",
@@ -4191,7 +4194,7 @@ Private.event_prototypes = {
         store = true,
         hidden = true,
         test = "true",
-        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+        init = "not issecretvalue(raidMarkIndex) and raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''" -- [MIDNIGHT EDIT] checking for secret values.
       },
       {
         type = "header",
@@ -4490,7 +4493,7 @@ Private.event_prototypes = {
         store = true,
         hidden = true,
         test = "true",
-        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+        init = "not issecretvalue(raidMarkIndex) and raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''" -- [MIDNIGHT EDIT] checking for secret values.
       },
       {
         type = "header",
@@ -4560,7 +4563,7 @@ Private.event_prototypes = {
   ["Combat Log"] = {
     type = "combatlog",
     events = {
-      ["events"] = {"COMBAT_LOG_EVENT_UNFILTERED"}
+      ["events"] = {"PLAYER_LOGIN"} -- [MIDNIGHT EDIT] trying to register COMBAT_LOG_EVENT_UNFILTERED taints everything for some reason. [original value: COMBAT_LOG_EVENT_UNFILTERED]
     },
     init = function(trigger)
       local ret = [[
@@ -4621,7 +4624,7 @@ Private.event_prototypes = {
         display = L["Source NPC Id"],
         type = "string",
         multiline = true,
-        init = "select(6, strsplit('-', sourceGUID or ''))",
+        init = "select(6, strsplit('-', sourceGUID or ''))", 
         store = true,
         conditionType = "string",
         preamble = "local sourceNpcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
@@ -4763,7 +4766,7 @@ Private.event_prototypes = {
         display = L["Destination NPC Id"],
         type = "string",
         multiline = true,
-        init = "select(6, strsplit('-', destGUID or ''))",
+        init = "select(6, strsplit('-', destGUID or ''))", 
         store = true,
         conditionType = "string",
         preamble = "local destNpcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
@@ -5367,9 +5370,9 @@ Private.event_prototypes = {
 
       local showOnCheck = "false";
       if (trigger.genericShowOn == "showOnReady") then
-        showOnCheck = "startTime and startTime == 0 or gcdCooldown";
+        showOnCheck = "not issecretvalue(startTime) and startTime and startTime == 0 or gcdCooldown"; -- [MIDNIGHT EDIT] checking for secret values.
       elseif (trigger.genericShowOn == "showOnCooldown") then
-        showOnCheck = "startTime and startTime > 0 and not gcdCooldown";
+        showOnCheck = "not issecretvalue(startTime) and startTime and startTime > 0 and not gcdCooldown"; -- [MIDNIGHT EDIT] checking for secret values.
       elseif (trigger.genericShowOn == "showAlways") then
         showOnCheck = "startTime ~= nil";
       end
@@ -5379,7 +5382,7 @@ Private.event_prototypes = {
       if track == "auto" and trackSpecificCharge then
         track = "charges"
       end
-
+      -- [MIDNIGHT EDIT] checking for secret values.
       table.insert(ret, ([=[
         local spellname = %s
         local ignoreRuneCD = %s
@@ -5393,20 +5396,20 @@ Private.event_prototypes = {
         local name, _, icon = Private.ExecEnv.GetSpellInfo(effectiveSpellId)
         local startTime, duration, gcdCooldown, readyTime, modRate, paused = WeakAuras.GetSpellCooldown(effectiveSpellId, ignoreRuneCD, showgcd, ignoreSpellKnown, track)
         local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(effectiveSpellId, ignoreSpellKnown)
-        local stacks = maxCharges and maxCharges ~= 1 and charges or (spellCount and spellCount > 0 and spellCount) or nil;
+        local stacks = not issecretvalue(maxCharges) and maxCharges and maxCharges ~= 1 and charges or (not issecretvalue(spellCount) and spellCount and spellCount > 0 and spellCount) or nil;
         if showlossofcontrol and startTime and duration then
           local locStart, locDuration = WeakAuras.GetSpellLossOfControlCooldown(spellname);
-          if locStart and locDuration and (locStart + locDuration) > (startTime + duration) then
+          if not issecretvalue(locStart) and not issecretvalue(locDuration) and not issecretvalue(startTime) and not issecretvalue(duration) and locStart and locDuration and (locStart + locDuration) > (startTime + duration) then
             startTime = locStart
             duration = locDuration
           end
         end
         if (charges == nil) then
           -- Use fake charges for spells that use GetSpellCooldown
-          charges = (duration == 0 or gcdCooldown) and 1 or 0;
+          charges = not issecretvalue(duration) and not issecretvalue(gcdCooldown) and (duration == 0 or gcdCooldown) and 1 or 0;
         end
         local genericShowOn = %s
-        local expirationTime = startTime and duration and startTime + duration
+        local expirationTime = ((issecretvalue(startTime) or issecretvalue(duration)) and startTime) or (startTime and duration and startTime + duration)
         state.spellname = spellname;
       ]=]):format(
         spellName,
@@ -5421,19 +5424,20 @@ Private.event_prototypes = {
       ))
 
       if (not trackSpecificCharge) then
+	    -- [MIDNIGHT EDIT] checking for secret values.
         table.insert(ret, [=[
           if paused then
-            if not state.paused then
+            if issecretvalue(state.paused) or not state.paused then
               state.paused = true
               state.expirationTime = nil
               state.changed = true
             end
-            if state.remaining ~= startTime then
+            if issecretvalue(state.remaining) or issecretvalue(startTime) or state.remaining ~= startTime then
               state.remaining = startTime
               state.changed = true
             end
           else
-            if (state.expirationTime ~= expirationTime) then
+            if issecretvalue(state.expirationTime) or issecretvalue(expirationTime) or (state.expirationTime ~= expirationTime) then
               state.expirationTime = expirationTime;
               state.changed = true;
             end
@@ -5444,11 +5448,11 @@ Private.event_prototypes = {
               state.changed = true
             end
           end
-          if (state.duration ~= duration) then
+          if issecretvalue(state.duration) or issecretvalue(duration) or (state.duration ~= duration) then
             state.duration = duration;
             state.changed = true;
           end
-          if (state.modRate ~= modRate) then
+          if issecretvalue(state.modRate) or issecretvalue(modRate) or (state.modRate ~= modRate) then
             state.modRate = modRate;
             state.changed = true;
           end
@@ -5456,6 +5460,7 @@ Private.event_prototypes = {
         ]=])
       else -- Tracking charges
         local trackedCharge = tonumber(trigger.trackcharge) or 1;
+	    -- [MIDNIGHT EDIT] checking for secret values.
         table.insert(ret, ([=[
           local trackedCharge = %s
           if (charges > trackedCharge) then
@@ -5463,7 +5468,7 @@ Private.event_prototypes = {
               state.expirationTime = 0;
               state.changed = true;
             end
-            if (state.duration ~= 0) then
+            if issecretvalue(state.duration) or (state.duration ~= 0) then
               state.duration = 0;
               state.changed = true;
             end
@@ -5473,17 +5478,17 @@ Private.event_prototypes = {
             state.progressType = 'timed';
           else
             if duration then
-              expirationTime = expirationTime + (trackedCharge - charges) * duration
+              expirationTime = (issecretvalue(expirationTime) or issecretvalue(trackedCharge) or issecretvalue(charges) or issecretvalue(duration)) and expirationTime or expirationTime + (trackedCharge - charges) * duration
             end
-            if (state.expirationTime ~= expirationTime) then
+            if issecretvalue(state.expirationTime) or issecretvalue(expirationTime) or (state.expirationTime ~= expirationTime) then
               state.expirationTime = expirationTime;
               state.changed = true;
             end
-            if (state.duration ~= duration) then
+            if issecretvalue(state.duration) or issecretvalue(duration) or (state.duration ~= duration) then
               state.duration = duration;
               state.changed = true;
             end
-            if (state.modRate ~= modRate) then
+            if issecretvalue(state.modRate) or issecretvalue(modRate) or (state.modRate ~= modRate) then
               state.modRate = modRate;
               state.changed = true;
             end
@@ -5494,9 +5499,10 @@ Private.event_prototypes = {
         ]=]):format(trackedCharge - 1))
       end
       if(trigger.use_remaining and trigger.genericShowOn ~= "showOnReady") then
+	    -- [MIDNIGHT EDIT] checking for secret values.
         table.insert(ret, ([[
           local remaining = 0;
-          if (not paused and expirationTime and expirationTime > 0) then
+          if not issecretvalue(expirationTime) and not issecretvalue(paused) and (not paused and expirationTime and expirationTime > 0) then
             remaining = expirationTime - GetTime();
             local remainingModRate = remaining / (modRate or 1);
             local remainingCheck = %s;
@@ -5716,7 +5722,7 @@ Private.event_prototypes = {
         display = L["On Cooldown"],
         conditionType = "bool",
         conditionTest = function(state, needle)
-          return state and state.show and (state.paused or (not state.gcdCooldown and state.expirationTime and state.expirationTime > GetTime())) == (needle == 1)
+          return state and state.show and (state.paused or (not issecretvalue(state.gcdCooldown) and not issecretvalue(state.expirationTime) and not state.gcdCooldown and state.expirationTime and state.expirationTime > GetTime())) == (not issecretvalue(needle) and needle == 1) -- [MIDNIGHT EDIT] checking for secret values.
         end,
       },
       {
@@ -6157,9 +6163,9 @@ Private.event_prototypes = {
       },
       {
         hidden = true,
-        test = "(genericShowOn == \"showOnReady\" and (startTime == 0 and enabled == 1 or gcdCooldown))" ..
-        "or (genericShowOn == \"showOnCooldown\" and (startTime > 0 or enabled == 0) and not gcdCooldown) " ..
-        "or (genericShowOn == \"showAlways\")"
+        test = "(genericShowOn == \"showOnReady\" and (not issecretvalue(startTime) and not issecretvalue(enabled) and startTime == 0 and enabled == 1 or gcdCooldown))" ..
+        "or (genericShowOn == \"showOnCooldown\" and (not issecretvalue(startTime) and not issecretvalue(enabled) and startTime > 0 or enabled == 0) and not gcdCooldown) " ..
+        "or (genericShowOn == \"showAlways\")" -- [MIDNIGHT EDIT] checking for secret values.
       }
     },
     hasItemID = true,
@@ -6621,7 +6627,7 @@ Private.event_prototypes = {
       },
       {
         hidden = true,
-        test = "(inverse and duration == 0) or (not inverse and duration > 0 and hasSpellName)"
+        test = "(inverse not issecretvalue(duration) and and duration == 0) or (not inverse and not issecretvalue(duration) and duration > 0 and hasSpellName)" -- [MIDNIGHT EDIT] checking for secret values.
       }
     },
     hasSpellID = true,
@@ -6797,16 +6803,17 @@ Private.event_prototypes = {
       if trigger.use_ignoreSpellCooldown then
         ret = ret .. [=[local active = Private.ExecEnv.IsUsableSpell(spellName or "")]=]
       else
+	    -- [MIDNIGHT EDIT] checking for secret values.
         ret = ret .. [=[
         local startTime, duration, gcdCooldown, readyTime, paused = WeakAuras.GetSpellCooldown(effectiveSpellId, nil, nil, nil, nil)
         local charges, maxCharges, spellCount, chargeGainTime, chargeLostTime = WeakAuras.GetSpellCharges(effectiveSpellId, nil)
-        local stacks = maxCharges and maxCharges > 1 and charges
-                       or spellCount and spellCount > 0 and spellCount
+        local stacks = not issecretvalue(maxCharges) and not issecretvalue(charges) and not issecretvalue(spellCount) and (maxCharges and maxCharges > 1 and charges
+                       or spellCount and spellCount > 0 and spellCount)
                        or nil
         if (charges == nil) then
-          charges = (duration == 0 or gcdCooldown) and 1 or 0;
+          charges = not issecretvalue(duration) and not issecretvalue(gcdCooldown) and (duration == 0 or gcdCooldown) and 1 or 0;
         end
-        local ready = (startTime == 0 and not paused) or charges > 0
+        local ready = not issecretvalue(startTime) and not issecretvalue(paused) and not issecretvalue(charges) and ((startTime == 0 and not paused) or charges > 0)
         local active = Private.ExecEnv.IsUsableSpell(spellName or "") and ready
         ]=]
       end
@@ -9502,7 +9509,7 @@ Private.event_prototypes = {
         type = "string",
         multiline = true,
         store = true,
-        init = "select(6, strsplit('-', UnitGUID(unit) or ''))",
+        init = "(issecretvalue(UnitCreatureID(unit)) and '0' or tostring(UnitCreatureID(unit)))",--"select(6, strsplit('-', UnitGUID(unit) or ''))", [MIDNIGHT EDIT] adding new API.
         conditionType = "string",
         preamble = "local npcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
         test = "npcIdChecker:Check(npcId)",
@@ -9746,6 +9753,7 @@ Private.event_prototypes = {
     name = L["Cast"],
     init = function(trigger)
       trigger.unit = trigger.unit or "player";
+	  -- [MIDNIGHT EDIT] checking for secret values.
       local ret = [=[
         unit = string.lower(unit)
         local destUnit = unit .. '-target'
@@ -10020,7 +10028,7 @@ Private.event_prototypes = {
         type = "string",
         multiline = true,
         store = true,
-        init = "select(6, strsplit('-', UnitGUID(unit) or ''))",
+        init = "(issecretvalue(UnitCreatureID(unit)) and '0' or tostring(UnitCreatureID(unit)))",--"select(6, strsplit('-', UnitGUID(unit) or ''))", [MIDNIGHT EDIT] adding new API.
         conditionType = "string",
         preamble = "local npcIdChecker = Private.ExecEnv.ParseStringCheck(%q)",
         test = "npcIdChecker:Check(npcId)",
@@ -10089,7 +10097,7 @@ Private.event_prototypes = {
         store = true,
         hidden = true,
         test = "true",
-        init = "raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''"
+        init = "not issecretvalue(raidMarkIndex) and raidMarkIndex > 0 and '{rt'..raidMarkIndex..'}' or ''" -- [MIDNIGHT EDIT] checking for secret values.
       },
       {
         name = "nameplateType",
@@ -12429,14 +12437,14 @@ Private.dynamic_texts = {
       end
       if state.progressType == "timed" then
         if state.paused then
-          return state.remaining and state.remaining >= 0 and state.remaining or nil
+          return state.remaining and not issecretvalue(state.remaining) and state.remaining >= 0 and state.remaining or nil -- [MIDNIGHT EDIT] checking for secret values.
         end
 
         if not state.expirationTime or not state.duration then
           return nil
         end
-        local remaining = state.expirationTime - GetTime();
-        return remaining >= 0 and remaining or nil
+        local remaining = issecretvalue(state.expirationTime) and 0 or state.expirationTime - GetTime(); -- [MIDNIGHT EDIT] checking for secret values.
+        return (issecretvalue(remaining) or remaining >= 0) and remaining or nil -- [MIDNIGHT EDIT] checking for secret values.
       end
     end,
     func = function(remaining, state, progressPrecision)
@@ -12481,14 +12489,14 @@ Private.dynamic_texts = {
         return state.total, false
       end
       if state.progressType == "timed" then
-        if not state.duration then
+        if not issecretvalue(state.duration) and not state.duration then -- [MIDNIGHT EDIT] checking for secret values.
           return nil
         end
         return state.duration, true
       end
     end,
     func = function(duration, state, totalPrecision)
-      if not state or state.progressType ~= "timed" then
+      if not state or state.progressType ~= "timed" or issecretvalue(duration) then -- [MIDNIGHT EDIT] checking for secret values.
         return duration
       end
       if type(duration) ~= "number" then
@@ -12521,7 +12529,7 @@ Private.dynamic_texts = {
   },
   ["n"] = {
     get = function(state)
-      if not state then return "" end
+      if not state or issecretvalue(state.name) then return "" end -- [MIDNIGHT EDIT] checking for secret values.
       return state.name or state.id or "", true
     end,
     func = function(v)
@@ -12530,7 +12538,7 @@ Private.dynamic_texts = {
   },
   ["i"] = {
     get = function(state)
-      if not state then return "" end
+      if not state or issecretvalue(state.icon) then return "" end -- [MIDNIGHT EDIT] checking for secret values.
       return state.icon or "Interface\\Icons\\INV_Misc_QuestionMark"
     end,
     func = function(v)
@@ -12539,8 +12547,8 @@ Private.dynamic_texts = {
   },
   ["s"] = {
     get = function(state)
-      if not state or state.stacks == 0 then return "" end
-      return state.stacks
+      if not state or (not issecretvalue(state.stacks) and state.stacks == 0) then return "" end -- [MIDNIGHT EDIT] checking for secret values.
+      return issecretvalue(state.stacks) and C_StringUtil.TruncateWhenZero(state.stacks) or state.stacks -- [MIDNIGHT EDIT] added new API.
     end,
     func = function(v)
       return v

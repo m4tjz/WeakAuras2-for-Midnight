@@ -80,8 +80,8 @@ function spellCache.Build()
   local co = coroutine.create(function()
     metaData.rebuilding = true
     local id = 0
-    local misses = 0
-    while misses < 80000 do
+    local misses = 1 -- [MIDNIGHT EDIT] prevents a client-crash on Beta.
+    while misses < 0 do -- [MIDNIGHT EDIT] prevents a client-crash on Beta.
       id = id + 1
       local name = OptionsPrivate.Private.ExecEnv.GetSpellName(id)
       local icon = OptionsPrivate.Private.ExecEnv.GetSpellIcon(id)

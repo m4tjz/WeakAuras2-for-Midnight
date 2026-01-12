@@ -53,6 +53,7 @@ local FixDebuffClass
 if WeakAuras.IsRetail() then
   local LibDispell = LibStub("LibDispel-1.0")
   FixDebuffClass = function(debuffClass, spellId)
+	--[[ [MIDNIGHT EDIT] this will nearly always be a secret value.
     if debuffClass == nil then
       local bleedList = LibDispell:GetBleedList()
       if bleedList[spellId] then
@@ -64,7 +65,7 @@ if WeakAuras.IsRetail() then
       debuffClass = "enrage"
     else
       debuffClass = string.lower(debuffClass)
-    end
+    end]]
     return debuffClass
   end
 else
@@ -164,7 +165,7 @@ end
 
 local function UnitInRangeFixed(unit)
   local inRange, checked = UnitInRange(unit)
-  return inRange or not checked
+  return (not issecretvalue(inRange) and inRange) or (not issecretvalue(checked) and not checked)
 end
 
 Private.ExecEnv.UnitInRangeFixed = UnitInRangeFixed
@@ -245,8 +246,8 @@ local function ScanMatchData(time, triggerInfo, unit, filter)
   if matchData[unit] and matchData[unit][filter] then
     for index, match in pairs(matchData[unit][filter]) do
       if (not triggerInfo.auranames and not triggerInfo.auraspellids)
-          or (triggerInfo.auranames and tContains(triggerInfo.auranames, match.name))
-          or (triggerInfo.auraspellids and tContains(triggerInfo.auraspellids, match.spellId)) then
+          or (not issecretvalue(match.name) and triggerInfo.auranames and tContains(triggerInfo.auranames, match.name)) -- [MIDNIGHT EDIT] checking for secret values.
+          or (not issecretvalue(match.spellId) and triggerInfo.auraspellids and tContains(triggerInfo.auraspellids, match.spellId)) then -- [MIDNIGHT EDIT] checking for secret values.
         if triggerInfo.fetchTooltip then
           matchData[unit][filter][index]:UpdateTooltip(time)
         end
@@ -367,10 +368,10 @@ if newAPI then
         end
         wipe(matchData.auras)
 
-        local sfn = GetSubTable(scanFuncName, unit, filter, matchData.name)
-        local sfng = GetSubTable(scanFuncNameGroup, unit, filter, matchData.name)
-        local sfs = GetSubTable(scanFuncSpellId, unit, filter, matchData.spellId)
-        local sfsg = GetSubTable(scanFuncSpellIdGroup, unit, filter, matchData.spellId)
+        local sfn = GetSubTable(scanFuncName, unit, filter, not issecretvalue(matchData.name) and matchData.name or "") -- [MIDNIGHT EDIT] checking for secret values.
+        local sfng = GetSubTable(scanFuncNameGroup, unit, filter, not issecretvalue(matchData.name) and matchData.name or "") -- [MIDNIGHT EDIT] checking for secret values.
+        local sfs = GetSubTable(scanFuncSpellId, unit, filter, not issecretvalue(matchData.spellId) and matchData.spellId or "") -- [MIDNIGHT EDIT] checking for secret values.
+        local sfsg = GetSubTable(scanFuncSpellIdGroup, unit, filter, not issecretvalue(matchData.spellId) and matchData.spellId or "") -- [MIDNIGHT EDIT] checking for secret values.
         local sfg = GetSubTable(scanFuncGeneral, unit, filter)
         local sfgg = GetSubTable(scanFuncGeneralGroup, unit, filter)
 
@@ -436,17 +437,17 @@ end
 ---@param t2 any[]?
 ---@return boolean
 local function ArrayCompare(t1, t2)
-  if t1 == nil then
+  if t1 == nil or issecrettable(t1) then -- [MIDNIGHT EDIT] checking for secret tables.
     return t2 == nil
   end
-  if t2 == nil then
+  if t2 == nil or issecrettable(t2) then -- [MIDNIGHT EDIT] checking for secret tables.
     return false
   end
   if #t1 ~= #t2 then
     return false
   end
   for i = 1, #t1 do
-    if t1[i] ~= t2[i] then
+    if not issecretvalue(t1[i]) and not issecretvalue(t2[i]) and t1[i] ~= t2[i] then
       return false
     end
   end
@@ -461,7 +462,7 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, auraInstance
     matchData[unit][filter] = {}
   end
   local key = index or auraInstanceID
-  local debuffClassIcon = WeakAuras.EJIcons[debuffClass]
+  local debuffClassIcon = not issecretvalue(debuffClass) and WeakAuras.EJIcons[debuffClass] -- [MIDNIGHT EDIT] checking for secret values.
   if not matchData[unit][filter][key] then
     matchData[unit][filter][key] = {
       name = name,
@@ -473,7 +474,7 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, auraInstance
       expirationTime = expirationTime,
       modRate = modRate,
       unitCaster = unitCaster,
-      casterName = unitCaster and GetUnitName(unitCaster, false) or "",
+      casterName = not issecretvalue(unitCaster) and unitCaster and GetUnitName(unitCaster, false) or "", -- [MIDNIGHT EDIT] checking for secret values.
       spellId = spellId,
       unit = unit,
       unitName = GetUnitName(unit, false) or "",
@@ -496,79 +497,79 @@ local function UpdateMatchData(time, matchDataChanged, unit, index, auraInstance
   local data = matchData[unit][filter][key]
   local changed = false
 
-  if data.name ~= name then
+  if issecretvalue(data.name) or issecretvalue(name) or data.name ~= name then -- [MIDNIGHT EDIT] checking for secret values.
     data.name = name
     changed = true
   end
 
-  if data.icon ~= icon then
+  if issecretvalue(data.icon) or issecretvalue(icon) or data.icon ~= icon then -- [MIDNIGHT EDIT] checking for secret values.
     data.icon = icon
     changed = true
   end
 
-  if data.stacks ~= stacks then
+  if issecretvalue(data.stacks) or issecretvalue(stacks) or data.stacks ~= stacks then -- [MIDNIGHT EDIT] checking for secret values.
     data.stacks = stacks
     changed = true
   end
 
-  if data.debuffClass ~= debuffClass then
+  if issecretvalue(data.debuffClass) or issecretvalue(debuffClass) or data.debuffClass ~= debuffClass then -- [MIDNIGHT EDIT] checking for secret values.
     data.debuffClass = debuffClass
     changed = true
   end
 
-  if data.debuffClassIcon ~= debuffClassIcon then
+  if issecretvalue(data.debuffClassIcon) or issecretvalue(debuffClassIcon) or data.debuffClassIcon ~= debuffClassIcon then -- [MIDNIGHT EDIT] checking for secret values.
     data.debuffClassIcon = debuffClassIcon
     changed = true
   end
 
-  if data.duration ~= duration then
+  if issecretvalue(data.duration) or issecretvalue(duration) or data.duration ~= duration then -- [MIDNIGHT EDIT] checking for secret values.
     data.duration = duration
     changed = true
   end
 
-  if data.expirationTime ~= expirationTime then
+  if issecretvalue(data.expirationTime) or issecretvalue(expirationTime) or data.expirationTime ~= expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
     data.expirationTime = expirationTime
     changed = true
   end
 
-  if data.modRate ~= modRate then
+  if issecretvalue(data.modRate) or issecretvalue(modRate) or data.modRate ~= modRate then -- [MIDNIGHT EDIT] checking for secret values.
     data.modRate = modRate
     changed = true
   end
 
-  if data.unitCaster ~= unitCaster then
+  if issecretvalue(data.unitCaster) or issecretvalue(unitCaster) or data.unitCaster ~= unitCaster then -- [MIDNIGHT EDIT] checking for secret values.
     data.unitCaster = unitCaster
     changed = true
   end
 
-  local casterName = unitCaster and GetUnitName(unitCaster, false) or ""
-  if data.casterName ~= casterName then
+  local casterName = not issecretvalue(unitCaster) and unitCaster and GetUnitName(unitCaster, false) or "" -- [MIDNIGHT EDIT] checking for secret values.
+  if issecretvalue(data.casterName) or issecretvalue(casterName) or data.casterName ~= casterName then -- [MIDNIGHT EDIT] checking for secret values.
     data.casterName = casterName
     changed = true
   end
 
-  if data.spellId ~= spellId then
+  if issecretvalue(data.spellId) or issecretvalue(spellId) or data.spellId ~= spellId then -- [MIDNIGHT EDIT] checking for secret values.
     data.spellId = spellId
     changed = true
   end
 
-  if data.isStealable ~= isStealable then
+  if issecretvalue(data.isStealable) or issecretvalue(isStealable) or data.isStealable ~= isStealable then -- [MIDNIGHT EDIT] checking for secret values.
     data.isStealable = isStealable
     changed = true
   end
 
-  if data.isBossDebuff ~= isBossDebuff then
+  if issecretvalue(data.isBossDebuff) or issecretvalue(isBossDebuff) or data.isBossDebuff ~= isBossDebuff then -- [MIDNIGHT EDIT] checking for secret values.
     data.isBossDebuff = isBossDebuff
     changed = true
   end
 
-  if data.isCastByPlayer ~= isCastByPlayer then
+  if issecretvalue(data.isCastByPlayer) or issecretvalue(isCastByPlayer) or data.isCastByPlayer ~= isCastByPlayer then -- [MIDNIGHT EDIT] checking for secret values.
     data.isCastByPlayer = isCastByPlayer
     changed = true
   end
 
   local unitName = GetUnitName(unit, false) or ""
-  if data.unitName ~= unitName then
+  if issecretvalue(data.unitName) or issecretvalue(unitName) or data.unitName ~= unitName then -- [MIDNIGHT EDIT] checking for secret values.
     data.unitName = unitName
     changed = true
   end
@@ -640,11 +641,11 @@ local function FindBestMatchData(time, id, triggernum, triggerInfo, matchedUnits
     for index, auraData in pairs(unitData) do
       local remCheck = true
       if triggerInfo.remainingFunc and auraData.expirationTime then
-        if auraData.duration == 0 then
+        if not issecretvalue(auraData.duration) and auraData.duration == 0 then -- [MIDNIGHT EDIT] checking for secret values.
           remCheck = false
         else
-          local modRate = auraData.modRate or 1
-          local remaining = (auraData.expirationTime - time) / modRate
+          local modRate = issecretvalue(auraData.modRate) and auraData.modRate or auraData.modRate or 1 -- [MIDNIGHT EDIT] checking for secret values.
+          local remaining = issecretvalue(auraData.expirationTime) and auraData.expirationTime or (auraData.expirationTime - time) / modRate -- [MIDNIGHT EDIT] checking for secret values.
           remCheck = triggerInfo.remainingFunc(remaining)
           nextCheck = calculateNextCheck(triggerInfo.remainingCheck, remaining, auraData.expirationTime, modRate, nextCheck)
         end
@@ -652,7 +653,7 @@ local function FindBestMatchData(time, id, triggernum, triggerInfo, matchedUnits
 
       if remCheck then
         matchCount = matchCount + 1
-        stackCount = stackCount + (auraData.stacks or 0)
+        stackCount = (issecretvalue(stackCount) or issecretvalue(auraData.stacks) and stackCount) or stackCount + (auraData.stacks or 0) -- [MIDNIGHT EDIT] checking for secret values.
         matchedUnits[unit] = true
         if not unitCounted then
           unitCount = unitCount + 1
@@ -684,8 +685,8 @@ local function FindBestMatchDataForUnit(time, id, triggernum, triggerInfo, unit)
       if auraData.expirationTime == 0 then
         remCheck = false
       else
-        local modRate = auraData.modRate or 1
-        local remaining = (auraData.expirationTime - time) / modRate
+        local modRate = issecretvalue(auraData.modRate) and auraData.modRate or auraData.modRate or 1 -- [MIDNIGHT EDIT] checking for secret values.
+        local remaining = issecretvalue(auraData.expirationTime) and auraData.expirationTime or (auraData.expirationTime - time) / modRate -- [MIDNIGHT EDIT] checking for secret values.
         remCheck = triggerInfo.remainingFunc(remaining)
         nextCheck = calculateNextCheck(triggerInfo.remainingCheck, remaining, auraData.expirationTime, modRate, nextCheck)
       end
@@ -693,7 +694,7 @@ local function FindBestMatchDataForUnit(time, id, triggernum, triggerInfo, unit)
 
     if remCheck then
       matchCount = matchCount + 1
-      stackCount = stackCount + (auraData.stacks or 0)
+      stackCount = (issecretvalue(stackCount) or issecretvalue(auraData.stacks) and stackCount) or stackCount + (auraData.stacks or 0) -- [MIDNIGHT EDIT] checking for secret values.
       if not bestMatch or triggerInfo.compareFunc(bestMatch, auraData) then
         bestMatch = auraData
       end
@@ -727,7 +728,7 @@ local roleIcons = {
 }
 
 local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, matchCount, unitCount, maxUnitCount, matchCountPerUnit, totalStacks, affected, affectedUnits, unaffected, unaffectedUnits, role, raidMark)
-  local debuffClassIcon = WeakAuras.EJIcons[bestMatch.debuffClass]
+  local debuffClassIcon = not issecretvalue(bestMatch.debuffClass) and WeakAuras.EJIcons[bestMatch.debuffClass] -- [MIDNIGHT EDIT] checking for secret values.
   if not triggerStates[cloneId] then
     triggerStates[cloneId] = {
       show = true,
@@ -779,13 +780,13 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
     local changed = false
     state.time = time
 
-    if state.unit ~= bestMatch.unit then
+    if issecretvalue(state.unit) or issecretvalue(bestMatch.unit) or state.unit ~= bestMatch.unit then -- [MIDNIGHT EDIT] checking for secret values.
       state.unit = bestMatch.unit
       changed = true
     end
 
     local GUID = bestMatch.unit and UnitGUID(bestMatch.unit) or bestMatch.GUID
-    if state.GUID ~= GUID then
+    if issecretvalue(state.GUID) or issecretvalue(GUID) or state.GUID ~= GUID then -- [MIDNIGHT EDIT] checking for secret values.
       state.GUID = GUID
       changed = true
     end
@@ -796,12 +797,12 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       changed = true
     end
 
-    if state.raidMark ~= raidMark then
+    if issecretvalue(state.raidMark) or issecretvalue(bestMatch.raidMark) or state.raidMark ~= raidMark then -- [MIDNIGHT EDIT] checking for secret values.
       state.raidMark = raidMark
       changed = true
     end
 
-    if state.unitName ~= bestMatch.unitName then
+    if issecretvalue(state.unitName) or issecretvalue(bestMatch.unitName) or state.unitName ~= bestMatch.unitName then -- [MIDNIGHT EDIT] checking for secret values.
       state.unitName = bestMatch.unitName
       changed = true
     end
@@ -811,19 +812,19 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       changed = true
     end
 
-    if state.name ~= bestMatch.name then
+    if issecretvalue(state.name) or issecretvalue(bestMatch.name) or state.name ~= bestMatch.name then -- [MIDNIGHT EDIT] checking for secret values.
       state.name = bestMatch.name
       changed = true
     end
 
-    if state.icon ~= bestMatch.icon then
+    if issecretvalue(state.icon) or issecretvalue(bestMatch.icon) or state.icon ~= bestMatch.icon then -- [MIDNIGHT EDIT] checking for secret values.
       state.icon = bestMatch.icon
       changed = true
     end
 
-    if state.stacks ~= bestMatch.stacks then
+    if issecretvalue(state.stacks) or issecretvalue(bestMatch.stacks) or state.stacks ~= bestMatch.stacks then -- [MIDNIGHT EDIT] checking for secret values.
       if state.stacks and bestMatch.stacks then
-        if state.stacks < bestMatch.stacks then
+        if not issecretvalue(state.stacks) and not issecretvalue(bestMatch.stacks) and state.stacks < bestMatch.stacks then -- [MIDNIGHT EDIT] checking for secret values.
           state.stackGainTime = time
           state.stackLostTime = nil
         else
@@ -835,37 +836,37 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       changed = true
     end
 
-    if state.debuffClass ~= bestMatch.debuffClass then
+    if issecretvalue(state.debuffClass) or issecretvalue(bestMatch.debuffClass) or state.debuffClass ~= bestMatch.debuffClass then -- [MIDNIGHT EDIT] checking for secret values.
       state.debuffClass = bestMatch.debuffClass
       changed = true
     end
 
-    if state.debuffClassIcon ~= debuffClassIcon then
+    if issecretvalue(state.debuffClassIcon) or issecretvalue(bestMatch.debuffClassIcon) or state.debuffClassIcon ~= debuffClassIcon then -- [MIDNIGHT EDIT] checking for secret values.
       state.debuffClassIcon = debuffClassIcon
       changed = true
     end
 
-    if state.duration ~= bestMatch.duration then
+    if issecretvalue(state.duration) or issecretvalue(bestMatch.duration) or state.duration ~= bestMatch.duration then -- [MIDNIGHT EDIT] checking for secret values.
       state.duration = bestMatch.duration
       changed = true
     end
 
-    if not state.initialTime then
+    if issecretvalue(state.initialTime) or not state.initialTime then -- [MIDNIGHT EDIT] checking for secret values.
       -- Only set initialTime if it wasn't set before
       state.initialTime = time
       changed = true
     end
 
-    if state.expirationTime ~= bestMatch.expirationTime then
+    if issecretvalue(state.expirationTime) or issecretvalue(bestMatch.expirationTime) or state.expirationTime ~= bestMatch.expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
       -- A bit fuzzy checking
-      if state.expirationTime and bestMatch.expirationTime and bestMatch.expirationTime - state.expirationTime > 0.2  then
+      if not issecretvalue(state.expirationTime) and not issecretvalue(bestMatch.expirationTime) and state.expirationTime and bestMatch.expirationTime and bestMatch.expirationTime - state.expirationTime > 0.2  then -- [MIDNIGHT EDIT] checking for secret values.
         state.refreshTime = time
       end
       state.expirationTime = bestMatch.expirationTime
       changed = true
     end
 
-    if state.modRate ~= bestMatch.modRate then
+    if issecretvalue(state.modRate) or issecretvalue(bestMatch.modRate) or state.modRate ~= bestMatch.modRate then -- [MIDNIGHT EDIT] checking for secret values.
       state.modRate = bestMatch.modRate
       changed = true
     end
@@ -875,13 +876,13 @@ local function UpdateStateWithMatch(time, bestMatch, triggerStates, cloneId, mat
       changed = true
     end
 
-    if state.unitCaster ~= bestMatch.unitCaster then
+    if issecretvalue(state.unitCaster) or issecretvalue(bestMatch.unitCaster) or state.unitCaster ~= bestMatch.unitCaster then -- [MIDNIGHT EDIT] checking for secret values.
       state.unitCaster = bestMatch.unitCaster
       state.casterName = bestMatch.casterName
       changed = true
     end
 
-    if state.spellId ~= bestMatch.spellId then
+    if issecretvalue(state.spellId) or issecretvalue(bestMatch.spellId) or state.spellId ~= bestMatch.spellId then -- [MIDNIGHT EDIT] checking for secret values.
       state.spellId = bestMatch.spellId
       changed = true
     end
@@ -1021,12 +1022,12 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.name ~= fallbackName then
+    if issecretvalue(state.name) or issecretvalue(fallbackName) or state.name ~= fallbackName then -- [MIDNIGHT EDIT] checking for secret values.
       state.name = fallbackName
       changed = true
     end
 
-    if state.icon ~= fallbackIcon then
+    if issecretvalue(state.icon) or issecretvalue(fallbackIcon) or state.icon ~= fallbackIcon then -- [MIDNIGHT EDIT] checking for secret values.
       state.icon = fallbackIcon
       changed = true
     end
@@ -1051,7 +1052,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.expirationTime ~= math.huge then
+    if issecretvalue(state.expirationTime) or state.expirationTime ~= math.huge then -- [MIDNIGHT EDIT] checking for secret values.
       state.expirationTime = math.huge
       changed = true
     end
@@ -1061,7 +1062,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.modRate ~= 1 then
+    if issecretvalue(state.modRate) or state.modRate ~= 1 then -- [MIDNIGHT EDIT] checking for secret values.
       state.modRate = 1
       changed = true
     end
@@ -1072,7 +1073,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
     end
 
     local GUID = unit and UnitGUID(unit)
-    if state.GUID ~= GUID then
+    if issecretvalue(state.GUID) or issecretvalue(GUID) or state.GUID ~= GUID then -- [MIDNIGHT EDIT] checking for secret values.
       state.GUID = GUID
       changed = true
     end
@@ -1089,7 +1090,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
     end
 
     local unitName = unit and GetUnitName(unit, false) or ""
-    if state.unitName ~= unitName then
+    if issecretvalue(state.unitName) or issecretvalue(unitName) or state.unitName ~= unitName then -- [MIDNIGHT EDIT] checking for secret values.
       state.unitName = unitName
       changed = true
     end
@@ -1099,7 +1100,7 @@ local function UpdateStateWithNoMatch(time, triggerStates, triggerInfo, cloneId,
       changed = true
     end
 
-    if state.casterName ~= "" then
+    if issecretvalue(state.casterName) or state.casterName ~= "" then -- [MIDNIGHT EDIT] checking for secret values.
       state.casterName = ""
       changed = true
     end
@@ -1530,7 +1531,7 @@ local function SortMatchDataByUnitIndex(a, b)
   if a.index and b.index and a.index ~= b.index then
     return a.index < b.index
   end
-  return a.expirationTime < b.expirationTime
+  return not issecretvalue(a.expirationTime) and not issecretvalue(b.expirationTime) and a.expirationTime < b.expirationTime -- [MIDNIGHT EDIT] checking for secret values.
 end
 
 local function UpdateTriggerState(time, id, triggernum)
@@ -1584,11 +1585,11 @@ local function UpdateTriggerState(time, id, triggernum)
         for index, auraData in pairs(unitData) do
           local remCheck = true
           if triggerInfo.remainingFunc and auraData.expirationTime then
-            if auraData.expirationTime == 0 then
+            if not issecretvalue(auraData.expirationTime) and auraData.expirationTime == 0 then -- [MIDNIGHT EDIT] checking for secret values.
               remCheck = false
             else
               local modRate = auraData.modRate or 1
-              local remaining = (auraData.expirationTime - time) / modRate
+              local remaining = issecretvalue(auraData.expirationTime) and auraData.expirationTime or (auraData.expirationTime - time) / modRate -- [MIDNIGHT EDIT] checking for secret values.
               remCheck = triggerInfo.remainingFunc(remaining)
               nextCheck = calculateNextCheck(triggerInfo.remainingCheck, remaining, auraData.expirationTime, modRate, nextCheck)
             end
@@ -1597,7 +1598,7 @@ local function UpdateTriggerState(time, id, triggernum)
           if remCheck then
             tinsert(auraDatas, auraData)
             matchCount = matchCount + 1
-            totalStacks = totalStacks + (auraData.stacks or 0)
+            totalStacks = totalStacks + ((not issecretvalue(auraData.stacks) and auraData.stacks) or 0) -- [MIDNIGHT EDIT] checking for secret values.
             matchedUnits[unit] = true
             matchCountPerUnit[unit] = (matchCountPerUnit[unit] or 0) + 1
             if not unitCounted then
@@ -1627,7 +1628,7 @@ local function UpdateTriggerState(time, id, triggernum)
 
       local usedCloneIds = {};
       for index, auraData in ipairs(auraDatas) do
-        local cloneId = (auraData.GUID or auraData.unit or "unknown") .. " " .. auraData.spellId
+        local cloneId = (issecretvalue(auraData.GUID) or issecretvalue(auraData.spellId)) and auraData.unit.. " " .. index or ((auraData.GUID or auraData.unit or "unknown") .. " " .. auraData.spellId) -- [MIDNIGHT EDIT] checking for secret values.
         if usedCloneIds[cloneId] then
           usedCloneIds[cloneId] = usedCloneIds[cloneId] + 1
           cloneId = cloneId .. usedCloneIds[cloneId]
@@ -1666,7 +1667,7 @@ local function UpdateTriggerState(time, id, triggernum)
 
         if SatisfiesMatchCountPerUnit(triggerInfo, countPerUnit) then
           matchCount = matchCount + countPerUnit
-          totalStacks = totalStacks + (stacks or 0)
+          totalStacks = totalStacks + ((not issecretvalue(stacks) and stacks) or 0) -- [MIDNIGHT EDIT] checking for secret values.
           if bestMatch then
             unitCount = unitCount + 1
             matchedUnits[unit] = true
@@ -1901,10 +1902,10 @@ do
     local updatedMatchData = UpdateMatchData(_time, _matchDataChanged, _unit, nil, auraInstanceID, _filter, name, aura.icon, aura.applications, debuffClass, aura.duration, aura.expirationTime, aura.sourceUnit, aura.isStealable, aura.isBossAura, aura.isFromPlayerOrPlayerPet, spellId, aura.timeMod, aura.points)
 
     if updatedMatchData then -- Aura data changed, check against triggerInfos
-      CheckScanFuncs(_scanFuncName and _scanFuncName[name], _unit, _filter, auraInstanceID)
-      CheckScanFuncs(_scanFuncNameGroup and _scanFuncNameGroup[name], _unit, _filter, auraInstanceID)
-      CheckScanFuncs(_scanFuncSpellId and _scanFuncSpellId[spellId], _unit, _filter, auraInstanceID)
-      CheckScanFuncs(_scanFuncSpellIdGroup and _scanFuncSpellIdGroup[spellId], _unit, _filter, auraInstanceID)
+      CheckScanFuncs(not issecretvalue(name) and _scanFuncName and _scanFuncName[name], _unit, _filter, auraInstanceID) -- [MIDNIGHT EDIT] checking for secret values.
+      CheckScanFuncs(not issecretvalue(name) and _scanFuncNameGroup and _scanFuncNameGroup[name], _unit, _filter, auraInstanceID) -- [MIDNIGHT EDIT] checking for secret values.
+      CheckScanFuncs(not issecretvalue(spellId) and _scanFuncSpellId and _scanFuncSpellId[spellId], _unit, _filter, auraInstanceID) -- [MIDNIGHT EDIT] checking for secret values.
+      CheckScanFuncs(not issecretvalue(spellId) and _scanFuncSpellIdGroup and _scanFuncSpellIdGroup[spellId], _unit, _filter, auraInstanceID) -- [MIDNIGHT EDIT] checking for secret values.
       CheckScanFuncs(_scanFuncGeneral, _unit, _filter, auraInstanceID)
       CheckScanFuncs(_scanFuncGeneralGroup, _unit, _filter, auraInstanceID)
     end
@@ -1929,7 +1930,7 @@ do
           -- incremental
           if unitAuraUpdateInfo.addedAuras ~= nil then
             for _, aura in ipairs(unitAuraUpdateInfo.addedAuras) do
-              if (aura.isHelpful and filter == "HELPFUL") or (aura.isHarmful and filter == "HARMFUL") then
+              if (not issecretvalue(aura.isHelpful) and aura.isHelpful and filter == "HELPFUL") or (not issecretvalue(aura.isHarmful) and aura.isHarmful and filter == "HARMFUL") then -- [MIDNIGHT EDIT] checking for secret values.
                 HandleAura(aura)
               end
             end
@@ -1938,7 +1939,7 @@ do
           if unitAuraUpdateInfo.updatedAuraInstanceIDs ~= nil then
             for _, auraInstanceID in ipairs(unitAuraUpdateInfo.updatedAuraInstanceIDs) do
               local aura = C_UnitAuras.GetAuraDataByAuraInstanceID(unit, auraInstanceID)
-              if aura and ((aura.isHelpful and filter == "HELPFUL") or (aura.isHarmful and filter == "HARMFUL")) then
+              if aura and (not issecretvalue(aura.isHelpful) and (aura.isHelpful and filter == "HELPFUL") or not issecretvalue(aura.isHarmful) and (aura.isHarmful and filter == "HARMFUL")) then -- [MIDNIGHT EDIT] checking for secret values.
                 HandleAura(aura)
               end
             end
@@ -1983,10 +1984,10 @@ do
           local updatedMatchData = UpdateMatchData(time, matchDataChanged, unit, index, nil, filter, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, isBossDebuff, isCastByPlayer, spellId, modRate, nil)
 
           if updatedMatchData then -- Aura data changed, check against triggerInfos
-            CheckScanFuncs(scanFuncName and scanFuncName[name], unit, filter, index)
-            CheckScanFuncs(scanFuncNameGroup and scanFuncNameGroup[name], unit, filter, index)
-            CheckScanFuncs(scanFuncSpellId and scanFuncSpellId[spellId], unit, filter, index)
-            CheckScanFuncs(scanFuncSpellIdGroup and scanFuncSpellIdGroup[spellId], unit, filter, index)
+            CheckScanFuncs(not issecretvalue(name) and scanFuncName and scanFuncName[name], unit, filter, index) -- [MIDNIGHT EDIT] checking for secret values.
+            CheckScanFuncs(not issecretvalue(name) and scanFuncNameGroup and scanFuncNameGroup[name], unit, filter, index) -- [MIDNIGHT EDIT] checking for secret values.
+            CheckScanFuncs(not issecretvalue(spellId) and scanFuncSpellId and scanFuncSpellId[spellId], unit, filter, index) -- [MIDNIGHT EDIT] checking for secret values.
+            CheckScanFuncs(not issecretvalue(spellId) and scanFuncSpellIdGroup and scanFuncSpellIdGroup[spellId], unit, filter, index) -- [MIDNIGHT EDIT] checking for secret values.
             CheckScanFuncs(scanFuncGeneral, unit, filter, index)
             CheckScanFuncs(scanFuncGeneralGroup, unit, filter, index)
           end
@@ -2036,7 +2037,7 @@ end
 
 local function ScanGroupUnit(time, matchDataChanged, unitType, unit, unitAuraUpdateInfo)
   local unitExists = UnitExistsFixed(unit)
-  if existingUnits[unit] ~= unitExists then
+  if not issecretvalue(existingUnits[unit]) and not issecretvalue(unitExists) and existingUnits[unit] ~= unitExists then -- [MIDNIGHT EDIT] checking for secret values.
     existingUnits[unit] = unitExists
 
     if unitExistScanFunc[unit] then
@@ -2826,8 +2827,9 @@ local function createScanFunc(trigger)
   ]=]}
 
   if use_total then
+	-- [MIDNIGHT EDIT] checking for secret values.
     local ret2 = [=[
-      if not(matchData.duration / matchData.modRate %s %s) then
+      if issecretvalue(matchData.duration) or issecretvalue(matchData.modRate) or not(matchData.duration / matchData.modRate %s %s) then
         return false
       end
     ]=]
@@ -2835,8 +2837,9 @@ local function createScanFunc(trigger)
   end
 
   if useStacks then
+	-- [MIDNIGHT EDIT] checking for secret values.
     local ret2 = [=[
-      if not(matchData.stacks %s %s) then
+      if issecretvalue(matchData.stacks) or not(matchData.stacks %s %s) then
         return false
       end
     ]=]
@@ -2844,8 +2847,9 @@ local function createScanFunc(trigger)
   end
 
   if use_stealable then
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if not matchData.isStealable then
+      if issecretvalue(matchData.isStealable) or not matchData.isStealable then
         return false
       end
     ]=])
@@ -2858,8 +2862,9 @@ local function createScanFunc(trigger)
   end
 
   if use_isBossDebuff then
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if not matchData.isBossDebuff then
+      if issecretvalue(matchData.isBossDebuff) or not matchData.isBossDebuff then
         return false
       end
     ]=])
@@ -2872,8 +2877,9 @@ local function createScanFunc(trigger)
   end
 
   if use_castByPlayer then
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if not matchData.isCastByPlayer then
+      if issecretvalue(matchData.isCastByPlayer) or not matchData.isCastByPlayer then
         return false
       end
     ]=])
@@ -2886,9 +2892,10 @@ local function createScanFunc(trigger)
   end
 
   if use_debuffClass then
+	-- [MIDNIGHT EDIT] checking for secret values.
     local ret2 = [=[
       local tDebuffClass = %s;
-      if not tDebuffClass[matchData.debuffClass] then
+      if issecretvalue(matchData.debuffClass) or not tDebuffClass[matchData.debuffClass] then
         return false
       end
     ]=]
@@ -2896,14 +2903,16 @@ local function createScanFunc(trigger)
   end
 
   if trigger.ownOnly then
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if matchData.unitCaster ~= 'player' and matchData.unitCaster ~= 'pet' and matchData.unitCaster ~= 'vehicle' then
+      if not issecretvalue(matchData.unitCaster) and matchData.unitCaster ~= 'player' and matchData.unitCaster ~= 'pet' and matchData.unitCaster ~= 'vehicle' then
         return false
       end
     ]=])
   elseif trigger.ownOnly == false then
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if matchData.unitCaster == 'player' or matchData.unitCaster == 'pet' or matchData.unitCaster == 'vehicle' then
+      if issecretvalue(matchData.unitCaster) or matchData.unitCaster == 'player' or matchData.unitCaster == 'pet' or matchData.unitCaster == 'vehicle' then
         return false
       end
     ]=])
@@ -2911,22 +2920,25 @@ local function createScanFunc(trigger)
 
   if use_tooltip and trigger.tooltip_operator and trigger.tooltip then
     if trigger.tooltip_operator == "==" then
+	-- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.tooltip or matchData.tooltip ~= %s then
+      if not issecretvalue(matchData.tooltip) and not matchData.tooltip or matchData.tooltip ~= %s then
         return false
       end
       ]=]
       table.insert(ret, ret2:format(Private.QuotedString(trigger.tooltip)))
     elseif trigger.tooltip_operator == "find('%s')" then
+	-- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.tooltip or not matchData.tooltip:find(%s, 1, true) then
+      if not issecretvalue(matchData.tooltip) and not matchData.tooltip or not matchData.tooltip:find(%s, 1, true) then
         return false
       end
       ]=]
       table.insert(ret, ret2:format(Private.QuotedString(trigger.tooltip)))
     elseif trigger.tooltip_operator == "match('%s')" then
+	-- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.tooltip or not matchData.tooltip:match(%s) then
+      if not issecretvalue(matchData.tooltip) and not matchData.tooltip or not matchData.tooltip:match(%s) then
         return false
       end
       ]=]
@@ -2936,6 +2948,7 @@ local function createScanFunc(trigger)
 
   if use_tooltipValue and trigger.tooltipValueNumber and trigger.tooltipValue_operator and trigger.tooltipValue then
     local property = "tooltip" .. tonumber(trigger.tooltipValueNumber)
+	-- [MIDNIGHT EDIT] checking for secret values.
     local ret2 = [=[
       if not matchData.%s or not (matchData.%s %s %s) then
         return false
@@ -2946,22 +2959,25 @@ local function createScanFunc(trigger)
 
   if trigger.useNamePattern and trigger.namePattern_operator and trigger.namePattern_name then
     if trigger.namePattern_operator == "==" then
+	  -- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.name == %s then
+      if not issecretvalue(matchData.name) and not matchData.name == %s then
         return false
       end
       ]=]
       table.insert(ret, ret2:format(Private.QuotedString(trigger.namePattern_name)))
     elseif trigger.namePattern_operator == "find('%s')" then
+	  -- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.name:find(%s, 1, true) then
+      if not issecretvalue(matchData.name) and not matchData.name:find(%s, 1, true) then
         return false
       end
       ]=]
       table.insert(ret, ret2:format(Private.QuotedString(trigger.namePattern_name)))
     elseif trigger.namePattern_operator == "match('%s')" then
+	  -- [MIDNIGHT EDIT] checking for secret values.
       local ret2 = [=[
-      if not matchData.name:match(%s) then
+      if not issecretvalue(matchData.name) and not matchData.name:match(%s) then
         return false
       end
       ]=]
@@ -2993,13 +3009,14 @@ local function createScanFunc(trigger)
     table.insert(preamble, "local ignoreSpellId = {\n")
     for index, spellId in ipairs(trigger.ignoreAuraSpellids) do
       local spell = WeakAuras.SafeToNumber(spellId)
-      if spell then
+      if not issecretvalue(spellId) and spell then -- [MIDNIGHT EDIT] checking for secret values.
         table.insert(preamble, string.format("  [%s]  = true,\n", spell))
       end
     end
     table.insert(preamble, "}\n")
+	-- [MIDNIGHT EDIT] checking for secret values.
     table.insert(ret, [=[
-      if ignoreSpellId[matchData.spellId] then
+      if not issecretvalue(matchData.spellId) and ignoreSpellId[matchData.spellId] then
         return false
       end
     ]=])
@@ -3019,25 +3036,25 @@ end
 
 local matchCombineFunctions = {
   showHighest = function(bestMatch, auraMatch)
-    if bestMatch.expirationTime and auraMatch.expirationTime then
+    if not issecretvalue(bestMatch.expirationTime) and not issecretvalue(auraMatch.expirationTime) and bestMatch.expirationTime and auraMatch.expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
       return auraMatch.expirationTime > bestMatch.expirationTime
     end
     return true
   end,
   showLowest = function(bestMatch, auraMatch)
-    if bestMatch.expirationTime and auraMatch.expirationTime then
+    if not issecretvalue(bestMatch.expirationTime) and not issecretvalue(auraMatch.expirationTime) and bestMatch.expirationTime and auraMatch.expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
       return auraMatch.expirationTime < bestMatch.expirationTime
     end
     return false
   end,
   showLowestSpellId  = function(bestMatch, auraMatch)
-    if bestMatch.spellId and auraMatch.spellId then
+    if not issecretvalue(bestMatch.spellId) and not issecretvalue(auraMatch.spellId) and bestMatch.spellId and auraMatch.spellId then -- [MIDNIGHT EDIT] checking for secret values.
       return auraMatch.spellId < bestMatch.spellId
     end
     return false
   end,
   showHighestSpellId  = function(bestMatch, auraMatch)
-    if bestMatch.spellId and auraMatch.spellId then
+    if not issecretvalue(bestMatch.spellId) and not issecretvalue(auraMatch.spellId) and bestMatch.spellId and auraMatch.spellId then -- [MIDNIGHT EDIT] checking for secret values.
       return auraMatch.spellId > bestMatch.spellId
     end
     return false
@@ -3836,20 +3853,22 @@ local guidToUnit = {}
 
 local function ReleaseUID(unit)
   local guid = unitToGuid[unit]
-  if guid then
+  if not issecretvalue(guid) and guid then -- [MIDNIGHT EDIT] checking for secret values.
     guidToUnit[guid][unit] = nil
   end
 end
 
 local function SetUID(guid, unit)
   ReleaseUID(unit)
-
+  
+  if issecretvalue(guid) then return end -- [MIDNIGHT EDIT] checking for secret values.
   unitToGuid[unit] = guid
   guidToUnit[guid] = guidToUnit[guid] or {}
   guidToUnit[guid][unit] = true
 end
 
 local function GetUnit(guid)
+  if issecretvalue(guid) then return end -- [MIDNIGHT EDIT] checking for secret values.
   if not guidToUnit[guid] then
     return nil
   end
@@ -3864,7 +3883,7 @@ end
 
 local function TrackUid(unit)
   local GUID = UnitGUID(unit)
-  if GUID then
+  if not issecretvalue(GUID) and GUID then -- [MIDNIGHT EDIT] checking for secret values.
     SetUID(GUID, unit)
     BuffTrigger.HandlePendingTracks(unit, GUID)
   else
@@ -3872,7 +3891,7 @@ local function TrackUid(unit)
   end
   unit = unit.."target"
   GUID = UnitGUID(unit)
-  if GUID then
+  if not issecretvalue(GUID) and GUID then -- [MIDNIGHT EDIT] checking for secret values.
     SetUID(GUID, unit)
     BuffTrigger.HandlePendingTracks(unit, GUID)
   else
@@ -3881,7 +3900,7 @@ local function TrackUid(unit)
 end
 
 local function RemoveMatchDataMulti(base, destGUID, key, sourceGUID)
-  if base[key] and base[key][sourceGUID] then
+  if not issecretvalue(sourceGUID) and not issecretvalue(destGUID) and base[key] and base[key][sourceGUID] then -- [MIDNIGHT EDIT] checking for secret values.
     for id, idData in pairs(base[key][sourceGUID].auras) do
       for triggernum, triggerData in pairs(idData) do
         tDeleteItem(matchDataByTrigger[id][triggernum][destGUID], base[key][sourceGUID])
@@ -3897,6 +3916,7 @@ local function RemoveMatchDataMulti(base, destGUID, key, sourceGUID)
 end
 
 local function CleanUpMulti(guid)
+  if issecretvalue(guid) then return end -- [MIDNIGHT EDIT] checking for secret values.
   cleanupTimerMulti[guid].handle = nil
   cleanupTimerMulti[guid].nextTime = nil
   local nextCheck
@@ -3933,6 +3953,7 @@ local function CleanUpMulti(guid)
 end
 
 local function ScheduleMultiCleanUp(guid, time)
+  if issecretvalue(guid) then return end -- [MIDNIGHT EDIT] checking for secret values.
   cleanupTimerMulti[guid] = cleanupTimerMulti[guid] or {}
   if not cleanupTimerMulti[guid].nextTime or time < cleanupTimerMulti[guid].nextTime then
     if cleanupTimerMulti[guid].handle then
@@ -3944,6 +3965,7 @@ local function ScheduleMultiCleanUp(guid, time)
 end
 
 local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceName, destGUID, destName, spellId, spellName, amount)
+  if issecretvalue(sourceGUID) and issecretvalue(destGUID) then return end -- [MIDNIGHT EDIT] checking for secret values.
   local updated = false
   local icon = spellId and Private.ExecEnv.GetSpellIcon(spellId)
   ScheduleMultiCleanUp(destGUID, time + 60)
@@ -3969,12 +3991,12 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
     local match = base[key][sourceGUID]
     match.time = time
 
-    if match.name ~= spellName then
+    if issecretvalue(match.name) or issecretvalue(spellName) or match.name ~= spellName then -- [MIDNIGHT EDIT] checking for secret values.
       match.name = spellName
       updated = true
     end
 
-    if match.unitName ~= destName then
+    if issecretvalue(match.unitName) or issecretvalue(destName) or match.unitName ~= destName then -- [MIDNIGHT EDIT] checking for secret values.
       match.unitName = destName
       updated = true
     end
@@ -3990,32 +4012,32 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
       expirationTime = math.huge
     end
 
-    if match.duration ~= duration then
+    if issecretvalue(match.duration) or issecretvalue(duration) or match.duration ~= duration then -- [MIDNIGHT EDIT] checking for secret values.
       match.duration = duration
       updated = true
     end
 
-    if match.expirationTime ~= expirationTime then
+    if issecretvalue(match.expirationTime) or issecretvalue(expirationTime) or match.expirationTime ~= expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
       match.expirationTime = expirationTime
       updated = true
     end
 
-    if match.icon ~= icon then
+    if issecretvalue(match.icon) or issecretvalue(icon) or match.icon ~= icon then -- [MIDNIGHT EDIT] checking for secret values.
       match.icon = icon
       updated = true
     end
 
-    if match.count ~= amount then
+    if issecretvalue(match.count) or issecretvalue(amount) or match.count ~= amount then -- [MIDNIGHT EDIT] checking for secret values.
       match.count = amount
       updated = true
     end
 
-    if match.spellId ~= spellId then
+    if issecretvalue(match.spellId) or issecretvalue(spellId) or match.spellId ~= spellId then -- [MIDNIGHT EDIT] checking for secret values.
       match.spellId = spellId
       updated = true
     end
 
-    if match.casterName ~= sourceName then
+    if issecretvalue(match.casterName) or issecretvalue(sourceName) or match.casterName ~= sourceName then -- [MIDNIGHT EDIT] checking for secret values.
       match.casterName = sourceName
       updated = true
     end
@@ -4025,71 +4047,71 @@ local function UpdateMatchDataMulti(time, base, key, event, sourceGUID, sourceNa
 end
 
 local function AugmentMatchDataMultiWith(matchData, unit, name, icon, stacks, debuffClass, duration, expirationTime, unitCaster, isStealable, _, spellId, _, _, _, _, modRate)
-  if expirationTime == 0 then
+  if not issecretvalue(expirationTime) and expirationTime == 0 then -- [MIDNIGHT EDIT] checking for secret values.
     expirationTime = math.huge
   else
-    ScheduleMultiCleanUp(matchData.GUID, expirationTime / (modRate or 1))
+    ScheduleMultiCleanUp(matchData.GUID, issecretvalue(expirationTime) and expirationTime or expirationTime / (modRate or 1)) -- [MIDNIGHT EDIT] checking for secret values.
   end
   local changed = false
-  if matchData.name ~= name then
+  if issecretvalue(matchData.name) or issecretvalue(name) or matchData.name ~= name then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.name = name
     changed = true
   end
 
-  if matchData.icon ~= icon then
+  if issecretvalue(matchData.icon) or issecretvalue(icon) or matchData.icon ~= icon then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.icon = icon
     changed = true
   end
 
-  if matchData.stacks ~= stacks then
+  if issecretvalue(matchData.stacks) or issecretvalue(stacks) or matchData.stacks ~= stacks then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.stacks = stacks
     changed = true
   end
 
-  if matchData.debuffClass ~= debuffClass then
+  if issecretvalue(matchData.debuffClass) or issecretvalue(debuffClass) or matchData.debuffClass ~= debuffClass then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.debuffClass = debuffClass
     changed = true
   end
 
   local debuffClassIcon = WeakAuras.EJIcons[debuffClass]
-  if matchData.debuffClassIcon ~= debuffClassIcon then
+  if issecretvalue(matchData.debuffClassIcon) or issecretvalue(debuffClassIcon) or matchData.debuffClassIcon ~= debuffClassIcon then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.debuffClassIcon = debuffClassIcon
     changed = true
   end
 
-  if matchData.duration ~= duration then
+  if issecretvalue(matchData.duration) or issecretvalue(duration) or matchData.duration ~= duration then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.duration = duration
     changed = true
   end
 
-  if matchData.expirationTime ~= expirationTime then
+  if issecretvalue(matchData.expirationTime) or issecretvalue(expirationTime) or matchData.expirationTime ~= expirationTime then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.expirationTime = expirationTime
     changed = true
   end
 
-  if matchData.modRate ~= modRate then
+  if issecretvalue(matchData.modRate) or issecretvalue(modRate) or matchData.modRate ~= modRate then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.modRate = modRate
     changed = true
   end
 
-  if matchData.unitCaster ~= unitCaster then
+  if issecretvalue(matchData.unitCaster) or issecretvalue(unitCaster) or matchData.unitCaster ~= unitCaster then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.unitCaster = unitCaster
     changed = true
   end
 
-  local casterName = GetUnitName(unitCaster, false) or ""
-  if matchData.casterName ~= casterName then
+  local casterName = not issecretvalue(unitCaster) and GetUnitName(unitCaster, false) or "" -- [MIDNIGHT EDIT] checking for secret values.
+  if issecretvalue(matchData.casterName) or issecretvalue(casterName) or matchData.casterName ~= casterName then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.casterName = casterName
     changed = true
   end
 
   local unitName = GetUnitName(unit, false) or ""
-  if matchData.unitName ~= unitName then
+  if issecretvalue(matchData.unitName) or issecretvalue(unitName) or matchData.unitName ~= unitName then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.unitName = unitName
     changed = true
   end
 
-  if matchData.spellId ~= spellId then
+  if issecretvalue(matchData.spellId) or issecretvalue(spellId) or matchData.spellId ~= spellId then -- [MIDNIGHT EDIT] checking for secret values.
     matchData.spellId = name
     changed = true
   end
@@ -4283,7 +4305,7 @@ do
 end
 
 function BuffTrigger.HandlePendingTracks(unit, GUID)
-  if pendingTracks[GUID] then
+  if not issecretvalue(GUID) and pendingTracks[GUID] then -- [MIDNIGHT EDIT] checking for secret values.
     if matchDataMulti[GUID] then
       CheckAurasMulti(matchDataMulti[GUID], unit, "HELPFUL")
       CheckAurasMulti(matchDataMulti[GUID], unit, "HARMFUL")
@@ -4294,7 +4316,7 @@ end
 function BuffTrigger.InitMultiAura()
   if not multiAuraFrame then
     multiAuraFrame = CreateFrame("Frame")
-    multiAuraFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+    --multiAuraFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") -- [MIDNIGHT EDIT] trying to register COMBAT_LOG_EVENT_UNFILTERED taints everything for some reason.
     multiAuraFrame:RegisterEvent("UNIT_TARGET")
     multiAuraFrame:RegisterEvent("UNIT_AURA")
     multiAuraFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
@@ -4330,7 +4352,7 @@ function BuffTrigger.HandleMultiEvent(frame, event, ...)
   elseif event == "UNIT_AURA" then
     local unit = ...
     local guid = UnitGUID(unit)
-    if matchDataMulti[guid] then
+    if not issecretvalue(GUID) and matchDataMulti[guid] then -- [MIDNIGHT EDIT] checking for secret values.
       CheckAurasMulti(matchDataMulti[guid], unit, "HELPFUL")
       CheckAurasMulti(matchDataMulti[guid], unit, "HARMFUL")
     end

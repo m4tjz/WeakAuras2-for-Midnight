@@ -242,32 +242,32 @@ end
 
 local simpleFormatters = {
   AbbreviateNumbers = function(value)
-    if type(value) == "string" then value = tonumber(value) end
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
     return (type(value) == "number") and AbbreviateNumbers(value) or value
   end,
   AbbreviateLargeNumbers = function(value)
-    if type(value) == "string" then value = tonumber(value) end
-    return (type(value) == "number") and AbbreviateLargeNumbers(Round(value)) or value
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
+    return (type(value) == "number") and AbbreviateLargeNumbers(issecretvalue(value) and value or Round(value)) or value -- [MIDNIGHT EDIT] checking for secret values.
   end,
   BreakUpLargeNumbers = function(value)
-    if type(value) == "string" then value = tonumber(value) end
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
     return (type(value) == "number") and BreakUpLargeNumbers(value) or value
   end,
   floor = function(value)
-    if type(value) == "string" then value = tonumber(value) end
-    return (type(value) == "number") and floor(value) or value
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
+    return not issecretvalue(value) and (type(value) == "number") and floor(value) or value -- [MIDNIGHT EDIT] checking for secret values.
   end,
   ceil = function(value)
-    if type(value) == "string" then value = tonumber(value) end
-    return (type(value) == "number") and ceil(value) or value
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
+    return not issecretvalue(value) and (type(value) == "number") and ceil(value) or value -- [MIDNIGHT EDIT] checking for secret values.
   end,
   round = function(value)
-    if type(value) == "string" then value = tonumber(value) end
-    return (type(value) == "number") and Round(value) or value
+    if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
+    return not issecretvalue(value) and (type(value) == "number") and Round(value) or value -- [MIDNIGHT EDIT] checking for secret values.
   end,
   time = {
     [0] = function(value)
-      if type(value) == "string" then value = tonumber(value) end
+      if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
       if type(value) == "number" then
         if value > 60 then
           return string.format("%i:", math.floor(value / 60)) .. string.format("%02i", value % 60)
@@ -288,7 +288,7 @@ local simpleFormatters = {
     end,
     -- Fixed built-in formatter
     [99] = function(value)
-      if type(value) == "string" then value = tonumber(value) end
+      if not issecretvalue(value) and type(value) == "string" then value = tonumber(value) end -- [MIDNIGHT EDIT] checking for secret values.
       if type(value) == "number" then
         value = ceil(value)
         if value > 60 then
@@ -506,12 +506,12 @@ Private.format_types = {
       local formatter
       if threshold == 0 then
         formatter = function(value, state, trigger)
-          if type(value) ~= 'number' or value == math.huge then
+          if issecretvalue(value) or type(value) ~= 'number' or value == math.huge then -- [MIDNIGHT EDIT] checking for secret values.
             return ""
           end
 
           if timePointProperty[trigger] then
-            value = abs(GetTime() - value)
+            value = issecretvalue(value) and value or abs(GetTime() - value) -- [MIDNIGHT EDIT] checking for secret values.
           end
 
           if value <= 0 then
@@ -519,7 +519,7 @@ Private.format_types = {
           end
 
           if modRate and trigger and modRateProperty[trigger] then
-            value = value / (state[modRateProperty[trigger]] or 1.0)
+            value = (issecretvalue(value) or issecretvalue(state[modRateProperty[trigger]])) and value or value / (state[modRateProperty[trigger]] or 1.0) -- [MIDNIGHT EDIT] checking for secret values.
           end
 
           return mainFormater(value)
@@ -527,21 +527,21 @@ Private.format_types = {
       else
         local formatString = "%." .. precision .. "f"
         formatter = function(value, state, trigger)
-          if type(value) ~= 'number' or value == math.huge then
+          if issecretvalue(value) or type(value) ~= 'number' or value == math.huge then -- [MIDNIGHT EDIT] checking for secret values.
             return ""
           end
 
           if timePointProperty[trigger] then
-            value = abs(GetTime() - value)
+            value = issecretvalue(value) and value or abs(GetTime() - value) -- [MIDNIGHT EDIT] checking for secret values.
           end
 
           if value <= 0 then
             return ""
           end
           if modRate and trigger and modRateProperty[trigger] then
-            value = value / (state[modRateProperty[trigger]] or 1.0)
+            value = (issecretvalue(value) or issecretvalue(state[modRateProperty[trigger]])) and value or value / (state[modRateProperty[trigger]] or 1.0) -- [MIDNIGHT EDIT] checking for secret values.
           end
-          if value < threshold then
+          if not issecretvalue(value) and value < threshold then -- [MIDNIGHT EDIT] checking for secret values.
             return string.format(formatString, value)
           else
             return mainFormater(value)
@@ -587,7 +587,7 @@ Private.format_types = {
       local precision = get(symbol .. "_money_precision", 3)
 
       return function(value)
-        if type(value) ~= "number" then
+        if issecretvalue(value) or type(value) ~= "number" then -- [MIDNIGHT EDIT] checking for secret values.
           return ""
         end
         local gold = floor(value / 1e4)
@@ -3212,6 +3212,7 @@ if not WeakAuras.IsClassicEra() then
     [232] = unused, -- event party
     [236] = L["Lorewalking"],
     [237] = WeakAuras.IsMists() and L["Dungeon (Celestial)"] or unused,
+    [241] = L["Lorewalking Raid"], -- [MIDNIGHT EDIT] new difficulty.
     [244] = L["25 Player Raid (Titan Reforged)"],
   }
 

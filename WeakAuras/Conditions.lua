@@ -171,6 +171,7 @@ local function formatValueForAssignment(vType, value, pathToCustomFunction, path
 end
 
 local function formatValueForCall(type, property)
+  if issecretvalue(type) then return "nil" end -- [MIDNIGHT EDIT] checking for secret values.
   if type == "bool" or type == "number" or type == "list" or type == "icon" or type == "string" or type == "texture" or type == "textureLSM"
     or type == "progressSource"
   then
@@ -274,7 +275,7 @@ local function CreateTestForCondition(data, input, allConditionsTemplate, usedSt
     end
 
     local stateCheck = "state[" .. trigger .. "] and state[" .. trigger .. "].show and ";
-    local stateVariableCheck = string.format("state[" .. trigger .. "][%q]", variable) .. "~= nil and ";
+    local stateVariableCheck = string.format("not issecretvalue(state[" .. trigger .. "][%q]", variable) .. ") and "..string.format("state[" .. trigger .. "][%q]", variable) .. "~= nil and "; -- [MIDNIGHT EDIT] checking for secret values.
 
     local preambleString
 
@@ -324,7 +325,7 @@ local function CreateTestForCondition(data, input, allConditionsTemplate, usedSt
     elseif (cType == "timer" and value and op) then
       local triggerState = "state[" .. trigger .. "]"
       local varString = triggerState .. string.format("[%q]", variable)
-      local remainingTime = "(" .. varString .. " - now)"
+      local remainingTime = "(issecretvalue("..varString..") and 0 or " .. varString .. " - now)" -- [MIDNIGHT EDIT] checking for secret values.
       if pausedProperty and remainingProperty then
         local pausedString = "state[" .. trigger .. "]" .. string.format("[%q]", pausedProperty)
         local remainingString = "(state[" .. trigger .. "]" .. string.format("[%q]", remainingProperty) .. " or 0)"
@@ -333,7 +334,7 @@ local function CreateTestForCondition(data, input, allConditionsTemplate, usedSt
       end
 
       local divideModRate = modRateProperty
-            and  " / (state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty) .. " or 1.0)"
+            and  " / (".."not issecretvalue(".."state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty)..") and state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty) .. " or 1.0)" -- [MIDNIGHT EDIT] checking for secret values.
             or ""
 
       if (op == "==") then
@@ -433,34 +434,35 @@ local function CreateTestForCondition(data, input, allConditionsTemplate, usedSt
 
         recheckCode = string.format("  nextTime = Private.ExecEnv.CallCustomConditionTest(%q, %s, state[%s], %s) \n",
                                     uid, testFunctionNumber, trigger, valueString)
-        recheckCode = recheckCode .. "  if (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n"
+        recheckCode = recheckCode .. "  if not issecretvalue(nextTime) and not issecretvalue(recheckTime) and not issecretvalue(now) and (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n" -- [MIDNIGHT EDIT] checking for secret values.
         recheckCode = recheckCode .. "    recheckTime = nextTime\n";
         recheckCode = recheckCode .. "  end\n"
       end
     elseif (cType == "timer" and value) then
       local variableString =  "state[" .. trigger .. "]" .. string.format("[%q]",  variable)
       local multiplyModRate = modRateProperty
-            and  " * (state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty) .. " or 1.0)"
+            and  " * (" .. "not issecretvalue(state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty).. ") and state[" .. trigger .. "]" .. string.format("[%q]",  modRateProperty) .. " or 1.0)" -- [MIDNIGHT EDIT] checking for secret values.
             or ""
+			
       local andNotPaused = pausedProperty
             and "and not " .. "state[" .. trigger .. "]" .. string.format("[%q]",  pausedProperty)
             or ""
 
       recheckCode = "  nextTime = state[" .. trigger .. "] " .. andNotPaused
-      .. " and " .. variableString
+      .. " and not issecretvalue(" .. variableString.. ") and " .. variableString -- [MIDNIGHT EDIT] checking for secret values.
       .. " and " .. "(" .. variableString .. " - " .. value .. multiplyModRate .. ")\n"
 
-      recheckCode = recheckCode .. "  if (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n"
+      recheckCode = recheckCode .. "  if not issecretvalue(nextTime) and not issecretvalue(recheckTime) and not issecretvalue(now) and (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n" -- [MIDNIGHT EDIT] checking for secret values.
       recheckCode = recheckCode .. "    recheckTime = nextTime\n";
       recheckCode = recheckCode .. "  end\n"
     elseif (cType == "elapsedTimer" and value) then
       recheckCode = "  nextTime = state[" .. trigger .. "] and state[" .. trigger .. "]" .. string.format("[%q]",  variable) .. " and (state[" .. trigger .. "]" .. string.format("[%q]",  variable) .. " +" .. value .. ")\n";
-      recheckCode = recheckCode .. "  if (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n"
+      recheckCode = recheckCode .. "  if not issecretvalue(nextTime) and not issecretvalue(recheckTime) and not issecretvalue(now) and (nextTime and (not recheckTime or nextTime < recheckTime) and nextTime >= now) then\n" -- [MIDNIGHT EDIT] checking for secret values.
       recheckCode = recheckCode .. "    recheckTime = nextTime\n";
       recheckCode = recheckCode .. "  end\n"
     end
   end
-
+ 
   return check, recheckCode;
 end
 
@@ -834,7 +836,6 @@ local function ConstructConditionFunction(data)
     table.insert(ret, "  end\n")
   end
   table.insert(ret, "end\n")
-
   return table.concat(ret)
 end
 

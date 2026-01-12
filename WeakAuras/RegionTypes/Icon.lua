@@ -163,7 +163,8 @@ local function AnchorSubRegion(self, subRegion, anchorType, anchorPoint, selfPoi
   end
 
   if anchorType == "area" then
-    Private.regionPrototype.AnchorSubRegion(selfPoint == "region" and self or self.icon,
+    --Private.regionPrototype.AnchorSubRegion(selfPoint == "region" and self or self.icon,
+	Private.regionPrototype.AnchorSubRegion(self, -- [MIDNIGHT EDIT] attaching the subRegion to the Icon makes GetSize, GetHeight, and GetWidth return secrets for subRegions if the Icon is given a secret texture.
                     subRegion, anchorType, anchorPoint, selfPoint, anchorXOffset, anchorYOffset)
   else
     subRegion:ClearAllPoints()
@@ -571,7 +572,7 @@ local function modify(parent, region, data)
       cooldown.value = self.value
       cooldown.total = self.total
       cooldown.modRate = nil
-      if (self.value >= 0 and self.value <= self.total) then
+      if not issecretvalue(self.value) and not issecretvalue(self.total) and (self.value >= 0 and self.value <= self.total) then -- [MIDNIGHT EDIT] checking for secret values.
         cooldown:Show()
         cooldown:SetCooldown(GetTime() - (self.total - self.value), self.total)
         cooldown:Pause()
@@ -586,7 +587,7 @@ local function modify(parent, region, data)
       else
         cooldown:Resume()
       end
-      if (self.duration > 0 and self.expirationTime > GetTime() and self.expirationTime ~= math.huge) then
+      if not issecretvalue(self.duration) and not issecretvalue(self.expirationTime) and (self.duration > 0 and self.expirationTime > GetTime() and self.expirationTime ~= math.huge) then -- [MIDNIGHT EDIT] checking for secret values.
         cooldown:Show();
         cooldown.expirationTime = self.expirationTime
         cooldown.duration = self.duration
@@ -604,7 +605,7 @@ local function modify(parent, region, data)
     end
 
     function region:PreShow()
-      if (cooldown.duration and cooldown.duration > 0.01 and cooldown.duration ~= math.huge and cooldown.expirationTime ~= math.huge) then
+      if not issecretvalue(cooldown.duration) and not issecretvalue(cooldown.expirationTime) and (cooldown.duration and cooldown.duration > 0.01 and cooldown.duration ~= math.huge and cooldown.expirationTime ~= math.huge) then -- [MIDNIGHT EDIT] checking for secret values.
         cooldown:Show();
         cooldown:SetCooldown(cooldown.expirationTime - cooldown.duration,
                              cooldown.duration,
