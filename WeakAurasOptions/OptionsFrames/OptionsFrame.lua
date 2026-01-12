@@ -511,20 +511,20 @@ function OptionsPrivate.CreateFrame()
   local thanksListCJ = lineWrapDiscordList(OptionsPrivate.Private.DiscordListCJ)
   local thanksListK = lineWrapDiscordList(OptionsPrivate.Private.DiscordListK)
 
---  local discordButton = addFooter(L["Discord"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
---            L["Chat with WeakAuras experts on our Discord server."])
---  discordButton:SetParent(tipFrame)
---  discordButton:SetPoint("LEFT", tipFrame, "LEFT")
+  local discordButton = addFooter(L["Discord"], [[Interface\AddOns\WeakAuras\Media\Textures\discord.tga]], "https://discord.gg/weakauras",
+            L["Chat with WeakAuras experts on our Discord server."])
+  discordButton:SetParent(tipFrame)
+  discordButton:SetPoint("LEFT", tipFrame, "LEFT")
 
---  local documentationButton = addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
---            L["Check out our wiki for a large collection of examples and snippets."])
---  documentationButton:SetParent(tipFrame)
---  documentationButton:SetPoint("LEFT", discordButton, "RIGHT", footerSpacing, 0)
+  local documentationButton = addFooter(L["Documentation"], [[Interface\AddOns\WeakAuras\Media\Textures\GitHub.tga]], "https://github.com/WeakAuras/WeakAuras2/wiki",
+            L["Check out our wiki for a large collection of examples and snippets."])
+  documentationButton:SetParent(tipFrame)
+  documentationButton:SetPoint("LEFT", discordButton, "RIGHT", footerSpacing, 0)
 
---  local thanksButton = addFooter(L["Thanks"], [[Interface\AddOns\WeakAuras\Media\Textures\waheart.tga]],
---                                 "https://www.patreon.com/WeakAuras", thanksList, thanksListCJ, thanksListK, nil, 800)
---  thanksButton:SetParent(tipFrame)
---  thanksButton:SetPoint("LEFT", documentationButton, "RIGHT", footerSpacing, 0)
+  local thanksButton = addFooter(L["Thanks"], [[Interface\AddOns\WeakAuras\Media\Textures\waheart.tga]],
+                                 "https://www.patreon.com/WeakAuras", thanksList, thanksListCJ, thanksListK, nil, 800)
+  thanksButton:SetParent(tipFrame)
+  thanksButton:SetPoint("LEFT", documentationButton, "RIGHT", footerSpacing, 0)
 
   if OptionsPrivate.changelog then
     local changelog
@@ -540,8 +540,8 @@ function OptionsPrivate.CreateFrame()
     changelogButton:SetPoint("LEFT", thanksButton, "RIGHT", footerSpacing, 0)
   end
 
-  local reportbugButton = addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://www.google.com/", -- [MIDNIGHT EDIT] replaced the link with Google's, it might be useful.
-            "There is no support for this version of WeakAuras.", nil, nil, true) -- [MIDNIGHT EDIT] there is no support for this patchwork AddOn.
+  local reportbugButton = addFooter(L["Found a Bug?"], [[Interface\AddOns\WeakAuras\Media\Textures\bug_report.tga]], "https://github.com/WeakAuras/WeakAuras2/issues/new?template=bug_report.yml",
+            L["Report bugs on our issue tracker."], nil, nil, true)
   reportbugButton:SetParent(tipFrame)
   reportbugButton:SetPoint("RIGHT", tipFrame, "RIGHT")
 
@@ -550,13 +550,13 @@ function OptionsPrivate.CreateFrame()
   wagoButton:SetParent(tipFrame)
   wagoButton:SetPoint("RIGHT", reportbugButton, "LEFT", -footerSpacing, 0)
 
---  local companionButton
---  if not OptionsPrivate.Private.CompanionData.slugs then
---    companionButton = addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
---            L["Keep your Wago imports up to date with the Companion App."])
---    companionButton:SetParent(tipFrame)
---    companionButton:SetPoint("RIGHT", wagoButton, "LEFT", -footerSpacing, 0)
---  end
+  local companionButton
+  if not OptionsPrivate.Private.CompanionData.slugs then
+    companionButton = addFooter(L["Update Auras"], [[Interface\AddOns\WeakAuras\Media\Textures\wagoupdate_refresh.tga]], "https://weakauras.wtf",
+            L["Keep your Wago imports up to date with the Companion App."])
+    companionButton:SetParent(tipFrame)
+    companionButton:SetPoint("RIGHT", wagoButton, "LEFT", -footerSpacing, 0)
+  end
 
   frame.ShowTip = function(self)
     self.tipFrame:Show()

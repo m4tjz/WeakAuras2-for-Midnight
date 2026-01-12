@@ -142,7 +142,7 @@ local properties = {
 
 local function glowStart(self, frame, color)
 
-  if not issecretvalue(frame:GetWidth()) and frame:GetWidth() < 1 or not issecretvalue(frame:GetHeight()) and frame:GetHeight() < 1 then -- [MIDNIGHT EDIT] checking for secret values.
+  if frame:GetWidth() < 1 or frame:GetHeight() < 1 then
     self.glowStop(frame)
     return
   end
@@ -350,7 +350,7 @@ local funcs = {
 
 local function create()
   local region = CreateFrame("Frame", nil, UIParent)
-  
+
   for name, func  in pairs(funcs) do
     region[name] = func
   end

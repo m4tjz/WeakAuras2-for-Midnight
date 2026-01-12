@@ -684,18 +684,6 @@ local function CreateFunctionCache(exec_env)
     if self.funcs[string] then
       return self.funcs[string]
     else
-	  --[[DEBUG PRINT]
-	  --if id == "A Murder of Crows" then
-	    local asd = string
-        local indextest = 1
-        for line in asd:gmatch('[^\r\n]+') do
-      	  indextest = indextest+1
-	  	  if indextest < 60 then--abs(indextest-53) < 5 then
-	  	    print(indextest,line)
-	  	  end
-        end
-	  --end
-	  -- [DEBUG PRINT]]
       local loadedFunction, errorString = loadstring(string, firstLine(string))
       if errorString then
         if not silent then

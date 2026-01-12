@@ -214,7 +214,7 @@ function TestForMultiSelect(trigger, arg)
     if trigger[name] and trigger[name].multi then
       for value, _ in pairs(trigger[name].multi) do
         if not arg.test then
-          test = test.. "not issecretvalue("..name..") and " .. name.."=="..(tonumber(value) or ("[["..value.."]]")).." or "; -- [MIDNIGHT EDIT] checking for secret values.
+          test = test..name.."=="..(tonumber(value) or ("[["..value.."]]")).." or ";
         else
           test = test..arg.test:format(tonumber(value) or ("[["..value.."]]")).." or ";
         end
@@ -234,7 +234,7 @@ function TestForMultiSelect(trigger, arg)
       return test;
     end
     if not arg.test then
-      test = trigger[name].single and "(".. "not issecretvalue("..name..") and " .. name.."=="..(tonumber(value) or ("[["..value.."]]"))..")"; -- [MIDNIGHT EDIT] checking for secret values.
+      test = trigger[name].single and "("..name.."=="..(tonumber(value) or ("[["..value.."]]"))..")";
     else
       test = trigger[name].single and "("..arg.test:format(tonumber(value) or ("[["..value.."]]"))..")";
     end
@@ -258,19 +258,19 @@ local function singleTest(arg, trigger, name, value, operator, use_exact)
         return "("..arg.test:format(value)..")";
       end
     else
-      return "(".. "not issecretvalue("..name..") and " .. name .." and "..name.."==" ..(number or ("\""..(tostring(value) or "").."\""))..")"; -- [MIDNIGHT EDIT] checking for secret values.
+      return "(".. name .." and "..name.."==" ..(number or ("\""..(tostring(value) or "").."\""))..")";
     end
   elseif(arg.test) then
-    return "(".. arg.test:format(tostring(value) or "")..")";
+    return "("..arg.test:format(tostring(value) or "")..")";
   elseif(arg.type == "longstring" and operator) then
     return TestForLongString(trigger, arg);
   elseif (arg.type == "string" or arg.type == "select") then
-    return "(".. "not issecretvalue("..name..") and " .. name .." and "..name.."==" ..(number or ("\""..(tostring(value) or "").."\""))..")"; -- [MIDNIGHT EDIT] checking for secret values.
+    return "(".. name .." and "..name.."==" ..(number or ("\""..(tostring(value) or "").."\""))..")";
   elseif (arg.type == "number") then
-    return "(".. "not issecretvalue("..name..") and " .. name .." and "..name..(operator or "==")..(number or 0) ..")"; -- [MIDNIGHT EDIT] checking for secret values.
+    return "(".. name .." and "..name..(operator or "==")..(number or 0) ..")";
   else
     -- Should be unused
-    return "(".. "not issecretvalue("..name..") and " .. name .." and "..name..(operator or "==")..(number or ("\""..(tostring(value) or 0).."\""))..")"; -- [MIDNIGHT EDIT] checking for secret values.
+    return "(".. name .." and "..name..(operator or "==")..(number or ("\""..(tostring(value) or 0).."\""))..")";
   end
 end
 
@@ -388,7 +388,7 @@ function ConstructFunction(prototype, trigger)
         if(arg.init == "arg") then
           tinsert(input, name);
         elseif(arg.init) then
-          init = init.."local "..name.." = "..arg.init.."\n"; -- [MIDNIGHT EDIT] checking for secret values.
+          init = init.."local "..name.." = "..arg.init.."\n";
         end
         if (arg.store) then
           tinsert(store, name);
@@ -452,12 +452,13 @@ function ConstructFunction(prototype, trigger)
   end
 
   for _, v in ipairs(store) do
-	table.insert(ret, "    if issecretvalue(state."..v..") or issecretvalue("..v..") or (state." .. v .. " ~= " .. v .. ") then\n") -- [MIDNIGHT EDIT] checking for secret values.
+    table.insert(ret, "    if (state." .. v .. " ~= " .. v .. ") then\n")
     table.insert(ret, "      state." .. v .. " = " .. v .. "\n")
     table.insert(ret, "      state.changed = true\n")
     table.insert(ret, "    end\n")
   end
   table.insert(ret, "return true else return false end end")
+
   return table.concat(ret);
 end
 
@@ -491,22 +492,22 @@ local function RunOverlayFuncs(event, state, id, errorHandler)
         additionalProgress.direction = a;
         changed = true;
       end
-      if issecretvalue(additionalProgress.width) or issecretvalue(b) or (additionalProgress.width ~= b) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (additionalProgress.width ~= b) then
         additionalProgress.width = b;
         changed = true;
       end
-      if issecretvalue(additionalProgress.offset) or issecretvalue(c) or (additionalProgress.offset ~= c) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (additionalProgress.offset ~= c) then
         additionalProgress.offset = c;
         changed = true;
       end
       additionalProgress.min = nil;
       additionalProgress.max = nil;
     else
-      if issecretvalue(additionalProgress.min) or issecretvalue(a) or (additionalProgress.min ~= a) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (additionalProgress.min ~= a) then
         additionalProgress.min = a;
         changed = true;
       end
-      if issecretvalue(additionalProgress.max) or issecretvalue(b) or (additionalProgress.max ~= b) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (additionalProgress.max ~= b) then
         additionalProgress.max = b;
         changed = true;
       end
@@ -544,12 +545,12 @@ function Private.ActivateEvent(id, triggernum, data, state, errorHandler)
     changed = true;
   end
   if (data.duration) then
-    local expirationTime = issecretvalue(data.duration) and data.duration or GetTime() + data.duration; -- [MIDNIGHT EDIT] checking for secret values.
-    if issecretvalue(state.expirationTime) or issecretvalue(expirationTime) or (state.expirationTime ~= expirationTime) then -- [MIDNIGHT EDIT] checking for secret values.
+    local expirationTime = GetTime() + data.duration;
+    if (state.expirationTime ~= expirationTime) then
       state.expirationTime = expirationTime;
       changed = true;
     end
-    if issecretvalue(state.duration) or issecretvalue(duration) or (state.duration ~= data.duration) then -- [MIDNIGHT EDIT] checking for secret values.
+    if (state.duration ~= data.duration) then
       state.duration = data.duration;
       changed = true;
     end
@@ -609,7 +610,7 @@ function Private.ActivateEvent(id, triggernum, data, state, errorHandler)
         state.progressType = "timed";
         changed = true;
       end
-      if issecretvalue(state.duration) or issecretvalue(arg1) or (state.duration ~= arg1) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (state.duration ~= arg1) then
         state.duration = arg1;
       end
       -- The Icon's SetCooldown requires that the **startTime** is positive, so ensure that
@@ -617,11 +618,11 @@ function Private.ActivateEvent(id, triggernum, data, state, errorHandler)
       if arg2 <= arg1 then
         arg2 = arg1
       end
-      if issecretvalue(state.expirationTime) or issecretvalue(arg2) or (state.expirationTime ~= arg2) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (state.expirationTime ~= arg2) then
         state.expirationTime = arg2;
         changed = true;
       end
-      local autoHide = not issecretvalue(arg1) and data.automaticAutoHide and arg1 > 0.01; -- [MIDNIGHT EDIT] checking for secret values.
+      local autoHide = data.automaticAutoHide and arg1 > 0.01;
       if (state.autoHide ~= autoHide) then
         changed = true;
         state.autoHide = autoHide;
@@ -1116,7 +1117,7 @@ local function AddFakeInformation(data, triggernum, state, eventData)
   end
   if state.progressType == "timed" then
     local expirationTime = state.expirationTime
-    if not issecretvalue(expirationTime) and expirationTime and type(expirationTime) == "number" and expirationTime ~= math.huge and expirationTime > GetTime() then -- [MIDNIGHT EDIT] checking for secret values.
+    if expirationTime and type(expirationTime) == "number" and expirationTime ~= math.huge and expirationTime > GetTime() then
       return
     end
     state.progressType = "timed"
@@ -1690,10 +1691,6 @@ function GenericTrigger.Add(data, region)
             triggerFunc = Private.LoadFunction(triggerFuncStr, id);
 
             durationFunc = prototype.durationFunc;
-			
-			if id == "Misdirection" then
-				print(durationFunc)
-			end
             nameFunc = prototype.nameFunc;
             iconFunc = prototype.iconFunc;
             textureFunc = prototype.textureFunc;
@@ -1825,7 +1822,7 @@ function GenericTrigger.Add(data, region)
               for i in event:gmatch("[^:]+") do
                 if not trueEvent then
                   trueEvent = string.upper(i)
-                  isCLEU = false --trueEvent == "CLEU" or trueEvent == "COMBAT_LOG_EVENT_UNFILTERED" -- [MIDNIGHT EDIT] trying to register COMBAT_LOG_EVENT_UNFILTERED taints everything for some reason.
+                  isCLEU = trueEvent == "CLEU" or trueEvent == "COMBAT_LOG_EVENT_UNFILTERED"
                   isTrigger = trueEvent == "TRIGGER"
                 elseif isCLEU then
                   local subevent = string.upper(i)
@@ -2223,7 +2220,7 @@ do
   function WeakAuras.InitSwingTimer()
     if not(swingTimerFrame) then
       swingTimerFrame = CreateFrame("Frame");
-      --swingTimerFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED"); -- [MIDNIGHT EDIT] trying to register COMBAT_LOG_EVENT_UNFILTERED taints everything for some reason.
+      swingTimerFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
       swingTimerFrame:RegisterEvent("PLAYER_ENTER_COMBAT");
       swingTimerFrame:RegisterEvent("PLAYER_LEAVE_COMBAT");
       swingTimerFrame:RegisterEvent("PLAYER_EQUIPMENT_CHANGED");
@@ -2283,7 +2280,7 @@ do
     for id, _ in pairs(runes) do
       local _, duration = GetRuneCooldown(id);
       duration = duration or 0;
-      runeDuration = (issecretvalue(duration) or duration > 0) and duration or runeDuration -- [MIDNIGHT EDIT] checking for secret values.
+      runeDuration = duration > 0 and duration or runeDuration
     end
     return runeDuration
   end
@@ -2304,7 +2301,7 @@ do
         modRate = spellCooldownInfo.modRate
       end
     end
-    if(not issecretvalue(duration) and duration and duration > 0) then -- [MIDNIGHT EDIT] checking for secret values.
+    if(duration and duration > 0) then
       if not(gcdStart) then
         event = "GCD_START";
       elseif(gcdStart ~= startTime or gcdDuration ~= duration or gcdModrate ~= modRate) then
@@ -2339,7 +2336,7 @@ do
       Private.CheckSpellCooldown(id, GetRuneDuration())
     end,
     Schedule = function(self, expirationTime, id)
-      if not issecretvalue(self.expirationTime[id]) and not issecretvalue(expirationTime) and ((not self.expirationTime[id] or expirationTime < self.expirationTime[id]) and expirationTime > 0) then -- [MIDNIGHT EDIT] checking for secret values.
+      if (not self.expirationTime[id] or expirationTime < self.expirationTime[id]) and expirationTime > 0 then
         self:Cancel(id)
         local duration = expirationTime - GetTime()
         if duration > 0 then
@@ -2358,8 +2355,8 @@ do
   }
 
   local function FetchSpellCooldown(self, id)
-    if self.duration[id] and self.expirationTime[id] then 
-      return (issecretvalue(self.expirationTime[id]) or issecretvalue(self.duration[id])) and self.expirationTime[id] or self.expirationTime[id] - self.duration[id], self.duration[id], false, self.readyTime[id], self.modRate[id] or 1.0 -- [MIDNIGHT EDIT] checking for secret values.
+    if self.duration[id] and self.expirationTime[id] then
+      return self.expirationTime[id] - self.duration[id], self.duration[id], false, self.readyTime[id], self.modRate[id] or 1.0
     elseif self.remainingTime[id] then
       return self.remainingTime[id], self.duration[id], true, self.readyTime[id], self.modRate[id] or 1.0
     end
@@ -2370,22 +2367,22 @@ do
     local changed = false
     local nowReady = false
     local time = GetTime()
-    if not issecretvalue(self.expirationTime[id]) and self.expirationTime[id] and self.expirationTime[id] <= time and self.expirationTime[id] ~= 0 then -- [MIDNIGHT EDIT] checking for secret values.
+    if self.expirationTime[id] and self.expirationTime[id] <= time and self.expirationTime[id] ~= 0 then
       self.readyTime[id] = self.expirationTime[id]
       self.duration[id] = 0
       self.expirationTime[id] = 0
       changed = true
       nowReady = true
     end
-    local endTime = (issecretvalue(startTime) or issecretvalue(duration)) and startTime or startTime + duration; -- [MIDNIGHT EDIT] checking for secret values.
-    if not issecretvalue(endTime) and endTime <= time then -- [MIDNIGHT EDIT] checking for secret values.
+    local endTime = startTime + duration;
+    if endTime <= time then
       startTime = 0
       duration = 0
       endTime = 0
     end
 
     if paused then
-      if issecretvalue(self.duration[id]) or issecretvalue(duration) or self.duration[id] ~= duration then -- [MIDNIGHT EDIT] checking for secret values.
+      if self.duration[id] ~= duration then
         self.duration[id] = duration
         changed = true
       end
@@ -2394,13 +2391,13 @@ do
         changed = true
       end
 
-      if issecretvalue(self.modRate[id]) or issecretvalue(modRate) or self.modRate[id] ~= modRate then -- [MIDNIGHT EDIT] checking for secret values.
+      if self.modRate[id] ~= modRate then
         self.modRate[id] = modRate
         changed = true
       end
 
-      local remaining = (issecretvalue(startTime) or issecretvalue(duration)) and startTime or startTime + duration - GetTime() -- [MIDNIGHT EDIT] checking for secret values.
-      if issecretvalue(self.remainingTime[id]) or self.remainingTime[id] ~= remaining then
+      local remaining = startTime + duration - GetTime()
+      if self.remainingTime[id] ~= remaining then
         self.remainingTime[id] = remaining
         changed = true
       end
@@ -2408,12 +2405,12 @@ do
       return changed, false
     end
 
-    if not issecretvalue(duration) and duration > 0 then -- [MIDNIGHT EDIT] checking for secret values.
-      if not issecretvalue(startTime) and not issecretvalue(gcdStart) and not issecretvalue(duration) and not issecretvalue(gcdDuration) and (startTime == gcdStart and duration == gcdDuration) -- [MIDNIGHT EDIT] checking for secret values.
+    if duration > 0 then
+      if (startTime == gcdStart and duration == gcdDuration)
           or (WeakAuras.IsClassicOrTBCOrWrath() and duration == shootDuration and startTime == shootStart)
       then
         -- GCD cooldown, this could mean that the spell reset!
-        if not issecretvalue(self.expirationTime[id]) and not issecretvalue(endTime) and self.expirationTime[id] and self.expirationTime[id] > endTime and self.expirationTime[id] ~= 0 then -- [MIDNIGHT EDIT] checking for secret values.
+        if self.expirationTime[id] and self.expirationTime[id] > endTime and self.expirationTime[id] ~= 0 then
           self.duration[id] = 0
           self.expirationTime[id] = 0
           if not self.readyTime[id] then
@@ -2432,18 +2429,18 @@ do
       changed = true
     end
 
-    if issecretvalue(self.duration[id]) or issecretvalue(duration) or self.duration[id] ~= duration then -- [MIDNIGHT EDIT] checking for secret values.
+    if self.duration[id] ~= duration then
       self.duration[id] = duration
       changed = true
     end
 
-    if issecretvalue(self.expirationTime[id]) or issecretvalue(endTime) or self.expirationTime[id] ~= endTime then -- [MIDNIGHT EDIT] checking for secret values.
+    if self.expirationTime[id] ~= endTime then
       self.expirationTime[id] = endTime
       changed = true
-      nowReady = not issecretvalue(endTime) and endTime == 0 -- [MIDNIGHT EDIT] checking for secret values.
+      nowReady = endTime == 0
     end
 
-    if issecretvalue(duration) or duration == 0 then -- [MIDNIGHT EDIT] checking for secret values.
+    if duration == 0 then
       if not self.readyTime[id] then
         self.readyTime[id] = time
       end
@@ -2451,7 +2448,7 @@ do
       self.readyTime[id] = nil
     end
 
-    if issecretvalue(self.modRate[id]) or issecretvalue(modRate) or self.modRate[id] ~= modRate then -- [MIDNIGHT EDIT] checking for secret values.
+    if self.modRate[id] ~= modRate then
       self.modRate[id] = modRate
       changed = true
     end
@@ -2670,10 +2667,10 @@ do
       local time = GetTime();
 
       local spellDetail = self.data[effectiveSpellId]
-      
-      local chargesChanged = not issecretvalue(spellDetail.charges) and not issecretvalue(charges) and not issecretvalue(spellDetail.count) and not issecretvalue(spellCount) and not issecretvalue(spellDetail.chargesMax) and not issecretvalue(maxCharges) and (spellDetail.charges ~= charges or spellDetail.count ~= spellCount -- [MIDNIGHT EDIT] checking for secret values.
-                            or spellDetail.chargesMax ~= maxCharges)
-      local chargesDifference = not issecretvalue(charges) and not issecretvalue(spellCount) and not issecretvalue(spellDetail.charges) and not issecretvalue(spellDetail.count) and (charges or spellCount or 0) - (spellDetail.charges or spellDetail.count or 0) or 0 -- [MIDNIGHT EDIT] checking for secret values.
+
+      local chargesChanged = spellDetail.charges ~= charges or spellDetail.count ~= spellCount
+                            or spellDetail.chargesMax ~= maxCharges
+      local chargesDifference = (charges or spellCount or 0) - (spellDetail.charges or spellDetail.count or 0)
       spellDetail.charges = charges
       spellDetail.chargesMax = maxCharges
       spellDetail.count = spellCount
@@ -2796,7 +2793,7 @@ do
       end
 
       if (showgcd) then
-        if not issecretvalue(startTime) and not issecretvalue(duration) and ((gcdStart or 0) + (gcdDuration or 0) > startTime + duration) then -- [MIDNIGHT EDIT] checking for secret values.
+        if ((gcdStart or 0) + (gcdDuration or 0) > startTime + duration) then
           if startTime == 0 then
             gcdCooldown = true
           end
@@ -3239,7 +3236,7 @@ do
     if GetSpellCooldown then
       startTimeCooldown, durationCooldown, enabled, modRate = GetSpellCooldown(id)
       if type(enabled) == "number" then
-        enabled = not issecretvalue(enabled) and enabled == 1 and true or false -- [MIDNIGHT EDIT] checking for secret values.
+        enabled = enabled == 1 and true or false
       end
     else
       local spellCooldownInfo = C_Spell.GetSpellCooldown(id);
@@ -3263,12 +3260,12 @@ do
     modRateCharges = modRateCharges or 1.0;
 
     -- WORKAROUND: Sometimes the API returns very high bogus numbers causing client freezes, discard them here. CurseForge issue #1008
-    if (not issecretvalue(durationCooldown) and durationCooldown > 604800) then -- [MIDNIGHT EDIT] checking for secret values.
+    if (durationCooldown > 604800) then
       durationCooldown = 0;
       startTimeCooldown = 0;
     end
 
-    if (not issecretvalue(startTimeCooldown) and startTimeCooldown > GetTime() + 2^31 / 1000) then -- [MIDNIGHT EDIT] checking for secret values.
+    if (startTimeCooldown > GetTime() + 2^31 / 1000) then
       -- WORKAROUND: WoW wraps around negative values with 2^32/1000
       -- So if we find a cooldown in the far future, then undo the wrapping
       startTimeCooldown = startTimeCooldown - 2^32 / 1000
@@ -3286,13 +3283,13 @@ do
     -- For Evoker, using an empowered spell puts spells on pause. Some spells are put on an entirely bogus 0.5 paused cd
     -- Others the real cd (that continues ticking) is paused.
     -- We treat anything with less than 0.5 as not on cd, and hope for the best.
-    if not issecretvalue(enabled) and not enabled and not issecretvalue(durationCooldown) and durationCooldown <= 0.5 then -- [MIDNIGHT EDIT] checking for secret values.
+    if not enabled and durationCooldown <= 0.5 then
       startTimeCooldown, durationCooldown, enabled = 0, 0, true
     end
 
-    local onNonGCDCD = not issecretvalue(durationCooldown) and not issecretvalue(startTimeCooldown) and not issecretvalue(gcdDuration) and not issecretvalue(startTimeCooldown) and durationCooldown and startTimeCooldown and durationCooldown > 0 and (durationCooldown ~= gcdDuration or startTimeCooldown ~= gcdStart); -- [MIDNIGHT EDIT] checking for secret values.
+    local onNonGCDCD = durationCooldown and startTimeCooldown and durationCooldown > 0 and (durationCooldown ~= gcdDuration or startTimeCooldown ~= gcdStart);
     if (onNonGCDCD) then
-      cooldownBecauseRune = not issecretvalue(runeDuration) and not issecretvalue(durationCooldown) and runeDuration and durationCooldown and abs(durationCooldown - runeDuration) < 0.001; -- [MIDNIGHT EDIT] checking for secret values.
+      cooldownBecauseRune = runeDuration and durationCooldown and abs(durationCooldown - runeDuration) < 0.001;
       unifiedCooldownBecauseRune = cooldownBecauseRune
     end
 
@@ -3300,7 +3297,7 @@ do
     if (charges == nil) then
       -- charges is nil if the spell has no charges.
       -- Nothing to do in that case
-    elseif (not issecretvalue(charges) and not issecretvalue(maxCharges) and charges == maxCharges) then -- [MIDNIGHT EDIT] checking for secret values.
+    elseif (charges == maxCharges) then
       -- At max charges,
       startTime, duration = 0, 0;
       startTimeCharges, durationCharges = 0, 0
@@ -3311,7 +3308,7 @@ do
       --  Otherwise check GetSpellCharges
       -- A few abilities have a minor cooldown just to prevent the user from triggering it multiple times,
       -- ignore them since practically no one wants to see them
-      if not issecretvalue(duration) and not issecretvalue(gcdDuration) and not issecretvalue(startTime) and (duration and duration <= 1.5 or (duration == gcdDuration and startTime == gcdStart)) then -- [MIDNIGHT EDIT] checking for secret values.
+      if duration and duration <= 1.5 or (duration == gcdDuration and startTime == gcdStart) then
         startTime, duration, unifiedModRate = startTimeCharges, durationCharges, modRateCharges
         unifiedCooldownBecauseRune = false
       end
@@ -3321,7 +3318,7 @@ do
 
     return charges, maxCharges, startTime, duration, unifiedCooldownBecauseRune,
            startTimeCooldown, durationCooldown, cooldownBecauseRune, startTimeCharges, durationCharges,
-           count, unifiedModRate, modRate, modRateCharges, not issecretvalue(enabled) and not enabled -- [MIDNIGHT EDIT] checking for secret values.
+           count, unifiedModRate, modRate, modRateCharges, not enabled
   end
 
   ---@type fun(id, runeDuration)
@@ -3696,11 +3693,11 @@ function WeakAuras.WatchUnitChange(unit)
     local function unitUpdate(unitA, eventsToSend)
       local oldUnitExists = watchUnitChange.unitExists[unitA]
       local oldGUID = watchUnitChange.unitIdToGUID[unitA]
-      local newGUID = not issecretvalue(WeakAuras.UnitExistsFixed(unitA)) and WeakAuras.UnitExistsFixed(unitA) and UnitGUID(unitA)
+      local newGUID = WeakAuras.UnitExistsFixed(unitA) and UnitGUID(unitA)
       local unitExists = UnitExists(unitA) -- UnitExistsFixed check both UnitExists and UnitGUID, but in edge cases we are interested in UnitExists
-      if issecretvalue(oldGUID) or issecretvalue(newGUID) or issecretvalue(oldUnitExists) or issecretvalue(unitExists) or (oldGUID ~= newGUID or oldUnitExists ~= unitExists) then -- [MIDNIGHT EDIT] checking for secret values.
+      if oldGUID ~= newGUID or oldUnitExists ~= unitExists then
         eventsToSend["UNIT_CHANGED_" .. unitA] = unitA
-        if not issecretvalue(oldGUID) and watchUnitChange.GUIDToUnitIds[oldGUID] then -- [MIDNIGHT EDIT] checking for secret values.
+        if watchUnitChange.GUIDToUnitIds[oldGUID] then
           for unitB in pairs(watchUnitChange.GUIDToUnitIds[oldGUID]) do
             if unitA ~= unitB then
               eventsToSend["UNIT_IS_UNIT_CHANGED_" .. unitA .. "_" .. unitB] = unitA
@@ -3708,7 +3705,7 @@ function WeakAuras.WatchUnitChange(unit)
             end
           end
         end
-        if not issecretvalue(newGUID) and watchUnitChange.GUIDToUnitIds[newGUID] then -- [MIDNIGHT EDIT] checking for secret values.
+        if watchUnitChange.GUIDToUnitIds[newGUID] then
           for unitB in pairs(watchUnitChange.GUIDToUnitIds[newGUID]) do
             if unitA ~= unitB then
               eventsToSend["UNIT_IS_UNIT_CHANGED_" .. unitA .. "_" .. unitB] = unitA
@@ -3718,13 +3715,13 @@ function WeakAuras.WatchUnitChange(unit)
         end
       end
       -- update data
-      if not issecretvalue(oldGUID) and oldGUID and watchUnitChange.GUIDToUnitIds[oldGUID] then -- [MIDNIGHT EDIT] checking for secret values.
+      if oldGUID and watchUnitChange.GUIDToUnitIds[oldGUID] then
         watchUnitChange.GUIDToUnitIds[oldGUID][unitA] = nil
         if next(watchUnitChange.GUIDToUnitIds[oldGUID]) == nil then
           watchUnitChange.GUIDToUnitIds[oldGUID] = nil
         end
       end
-      if not issecretvalue(newGUID) and newGUID then -- [MIDNIGHT EDIT] checking for secret values.
+      if newGUID then
         watchUnitChange.GUIDToUnitIds[newGUID] = watchUnitChange.GUIDToUnitIds[newGUID] or {}
         watchUnitChange.GUIDToUnitIds[newGUID][unitA] = true
       end
@@ -3735,7 +3732,7 @@ function WeakAuras.WatchUnitChange(unit)
     local function markerUpdate(unit, eventsToSend)
       local oldMarker = watchUnitChange.raidmark[unit]
       local newMarker = GetRaidTargetIndex(unit) or 0
-      if issecretvalue(oldMarker) or issecretvalue(newMarker) or newMarker ~= oldMarker then -- [MIDNIGHT EDIT] checking for secret values.
+      if newMarker ~= oldMarker then
         eventsToSend["UNIT_CHANGED_" .. unit] = unit
         watchUnitChange.raidmark[unit] = newMarker
       end
@@ -3897,12 +3894,12 @@ function WeakAuras.WatchUnitChange(unit)
   if watchUnitChange.trackedUnits[unit] then
     return
   end
-  local guid = not UnitGUID(unit)
+  local guid = UnitGUID(unit)
   watchUnitChange.trackedUnits[unit] = true
   watchUnitChange.unitIdToGUID[unit] = WeakAuras.UnitExistsFixed(unit) and UnitGUID(unit)
   watchUnitChange.unitExists[unit] = UnitExists(unit)
 
-  if not issecretvalue(guid) and guid then -- [MIDNIGHT EDIT] checking for secret values.
+  if guid then
     watchUnitChange.GUIDToUnitIds[guid] = watchUnitChange.GUIDToUnitIds[guid] or {}
     watchUnitChange.GUIDToUnitIds[guid][unit] = true
   end

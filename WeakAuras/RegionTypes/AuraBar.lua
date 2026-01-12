@@ -314,7 +314,6 @@ local barPrototype = {
   ["UpdateProgress"] = function(self)
     -- Limit values
     local value = self.value;
-	if issecretvalue(value) then return end -- [MIDNIGHT EDIT] checking for secret values.
     value = math.max(self.min, value);
     value = math.min(self.max, value);
 
@@ -367,13 +366,13 @@ local barPrototype = {
 
         local extraTexture = self.extraTextures[index];
 
-        local valueStart = issecretvalue(self.additionalBarsMin) and 0 or self.additionalBarsMin
-        local valueWidth = issecretvalue(self.additionalBarsMax) and issecretvalue(valueStart) and 0 or self.additionalBarsMax - valueStart; -- [MIDNIGHT EDIT] checking for secret values.
+        local valueStart = self.additionalBarsMin
+        local valueWidth = self.additionalBarsMax - valueStart;
 
         local startProgress = 0;
         local endProgress = 0;
 
-        if not issecretvalue(additionalBar.min) and not issecretvalue(additionalBar.max) and (additionalBar.min and additionalBar.max) then -- [MIDNIGHT EDIT] checking for secret values.
+        if (additionalBar.min and additionalBar.max) then
           if (valueWidth ~= 0) then
             startProgress = (additionalBar.min - valueStart) / valueWidth;
             endProgress = (additionalBar.max - valueStart) / valueWidth;
@@ -389,8 +388,8 @@ local barPrototype = {
             forwardDirection = not forwardDirection;
           end
 
-          local width = not issecretvalue(additionalBar.width) and additionalBar.width or 0; -- [MIDNIGHT EDIT] checking for secret values.
-          local offset = not issecretvalue(additionalBar.offset) and additionalBar.offset or 0; -- [MIDNIGHT EDIT] checking for secret values.
+          local width = additionalBar.width or 0;
+          local offset = additionalBar.offset or 0;
 
           if (width ~= 0 and valueWidth ~= 0) then
             if (forwardDirection) then
@@ -778,11 +777,11 @@ end
 
 local function FrameTick(self)
   local expirationTime = self.expirationTime
-  local remaining = issecretvalue(expirationTime) and 0 or expirationTime - GetTime() -- [MIDNIGHT EDIT] checking for secret values.
+  local remaining = expirationTime - GetTime()
   local duration = self.duration
-  local progress = (issecretvalue(duration) or issecretvalue(remaining)) and 0 or duration ~= 0 and remaining / duration or 0; -- [MIDNIGHT EDIT] checking for secret values.
+  local progress = duration ~= 0 and remaining / duration or 0;
   if self.inverse then
-    progress = issecretvalue(progress) and progress or 1 - progress; -- [MIDNIGHT EDIT] checking for secret values.
+    progress = 1 - progress;
   end
   self:SetProgress(progress)
 end
@@ -885,7 +884,7 @@ local funcs = {
   end,
   SetProgress = function(self, progress)
     if self.inverseDirection then
-      progress = issecretvalue(progress) and progress or 1 - progress; -- [MIDNIGHT EDIT] checking for secret values.
+      progress = 1 - progress;
     end
 
     if (self.smoothProgress) then
@@ -897,7 +896,7 @@ local funcs = {
   end,
   UpdateValue = function(self)
     local progress = 0;
-    if not issecretvalue(self.value) and not issecretvalue(self.total) and (self.total ~= 0) then -- [MIDNIGHT EDIT] checking for secret values.
+    if (self.total ~= 0) then
       progress = self.value / self.total;
     end
 
@@ -909,10 +908,10 @@ local funcs = {
     end
   end,
   UpdateTime = function(self)
-    local remaining = issecretvalue(self.expirationTime) and 0 or self.expirationTime - GetTime(); -- [MIDNIGHT EDIT] checking for secret values.
-    local progress = not issecretvalue(self.duration) and not issecretvalue(remaining) and self.duration ~= 0 and remaining / self.duration or 0; -- [MIDNIGHT EDIT] checking for secret values.
+    local remaining = self.expirationTime - GetTime();
+    local progress = self.duration ~= 0 and remaining / self.duration or 0;
     if self.inverse then
-      progress = issecretvalue(progress) and 0 or 1 - progress; -- [MIDNIGHT EDIT] checking for secret values.
+      progress = 1 - progress;
     end
     self:SetProgress(progress)
 

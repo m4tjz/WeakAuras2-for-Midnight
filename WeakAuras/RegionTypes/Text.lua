@@ -122,8 +122,8 @@ local function modify(parent, region, data)
 
   region.width = text:GetWidth();
   region.height = text:GetStringHeight();
-  region:SetWidth(issecretvalue(region.width) and 8 or region.width); -- [MIDNIGHT EDIT] checking for secret values.
-  region:SetHeight(issecretvalue(region.height) and 8 or region.height); -- [MIDNIGHT EDIT] checking for secret values.
+  region:SetWidth(region.width);
+  region:SetHeight(region.height);
 
   local tooltipType = Private.CanHaveTooltip(data);
   if(tooltipType and data.useTooltip) then
@@ -167,9 +167,9 @@ local function modify(parent, region, data)
         text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(textStr));
       end
 
-      local height = issecretvalue(text:GetStringHeight()) and 8 or text:GetStringHeight(); -- [MIDNIGHT EDIT] checking for secret values.
+      local height = text:GetStringHeight();
 
-      if issecretvalue(region.height) or (region.height ~= height) then -- [MIDNIGHT EDIT] checking for secret values.
+      if(region.height ~= height) then
         region.height = height
         region:SetHeight(height)
         if data.parent then
@@ -185,7 +185,7 @@ local function modify(parent, region, data)
     text:SetWordWrap(true);
     text:SetNonSpaceWrap(true);
     SetText = function(textStr)
-      if issecretvalue(textStr) or issecretvalue(text.displayText) or (textStr ~= text.displayText) then -- [MIDNIGHT EDIT] checking for secret values.
+      if(textStr ~= text.displayText) then
         if text:GetFont() then
           text:SetText(WeakAuras.ReplaceRaidMarkerSymbols(textStr));
         end
@@ -193,9 +193,9 @@ local function modify(parent, region, data)
         -- To unset scaling we need to temporarily detach the text from
         -- the region
         text:SetParent(UIParent)
-        local width = issecretvalue(text:GetStringHeight()) and 8 or text:GetWidth(); -- [MIDNIGHT EDIT] checking for secret values.
-        local height = issecretvalue(text:GetStringHeight()) and 8 or text:GetStringHeight(); -- [MIDNIGHT EDIT] checking for secret values.
-        if issecretvalue(region.width) or issecretvalue(region.height) or (width ~= region.width or height ~= region.height) then -- [MIDNIGHT EDIT] checking for secret values.
+        local width = text:GetWidth();
+        local height = text:GetStringHeight();
+        if(width ~= region.width or height ~= region.height ) then
           region.width = width
           region.height = height
           region:SetWidth(region.width);
@@ -260,7 +260,7 @@ local function modify(parent, region, data)
     if self.displayText and Private.ContainsAnyPlaceHolders(self.displayText) then
       UpdateText = function()
         local textStr = Private.ReplacePlaceHolders(self.displayText, self, nil, false, formatters);
-        if not issecretvalue(textStr) and textStr == "" then -- [MIDNIGHT EDIT] checking for secret values.
+        if textStr == "" then
           textStr = " "
         end
 

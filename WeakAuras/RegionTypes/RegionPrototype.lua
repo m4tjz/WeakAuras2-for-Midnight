@@ -433,7 +433,7 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     if minMaxConfig.adjustedMin then
       adjustMin = minMaxConfig.adjustedMin
     elseif minMaxConfig.adjustedMinRelPercent then
-      adjustMin = minMaxConfig.adjustedMinRelPercent * (not issecretvalue(total) and total or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      adjustMin = minMaxConfig.adjustedMinRelPercent * total
     else
       adjustMin = 0
     end
@@ -441,7 +441,7 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     if minMaxConfig.adjustedMax then
       max = minMaxConfig.adjustedMax
     elseif minMaxConfig.adjustedMaxRelPercent then
-      max = minMaxConfig.adjustedMaxRelPercent * (not issecretvalue(total) and total or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      max = minMaxConfig.adjustedMaxRelPercent * total
     else
       max = total
     end
@@ -450,8 +450,8 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     -- the animation code/sub elements needs those values in some convenient place
     self.minProgress, self.maxProgress = adjustMin, max
     self.progressType = "static"
-    self.value = issecretvalue(value) and value or value - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
-    self.total = issecretvalue(max) and max or max - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
+    self.value = value - adjustMin
+    self.total = max - adjustMin
     if self.UpdateValue then
       self:UpdateValue()
     end
@@ -486,25 +486,25 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     if minMaxConfig.adjustedMin then
       adjustMin = minMaxConfig.adjustedMin
     elseif minMaxConfig.adjustedMinRelPercent then
-      adjustMin = minMaxConfig.adjustedMinRelPercent * (not issecretvalue(duration) and duration or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      adjustMin = minMaxConfig.adjustedMinRelPercent * duration
     else
       adjustMin = 0
     end
 
     local max
-    if not issecretvalue(duration) and duration == 0 then -- [MIDNIGHT EDIT] checking for secret values.
+    if duration == 0 then
       max = 0
     elseif minMaxConfig.adjustedMax then
       max = minMaxConfig.adjustedMax
     elseif minMaxConfig.adjustedMaxRelPercent then
-      max = minMaxConfig.adjustedMaxRelPercent * (not issecretvalue(duration) and duration or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      max = minMaxConfig.adjustedMaxRelPercent * duration
     else
       max = duration
     end
     self.minProgress, self.maxProgress = adjustMin, max
     self.progressType = "timed"
-    self.duration = issecretvalue(max) and max or max - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
-    self.expirationTime = issecretvalue(expirationTime) and expirationTime or expirationTime - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
+    self.duration = max - adjustMin
+    self.expirationTime = expirationTime - adjustMin
     self.remaining = remaining
     self.modRate = modRate
     self.inverse = inverse
@@ -526,7 +526,7 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     if minMaxConfig.adjustedMin then
       adjustMin = minMaxConfig.adjustedMin
     elseif minMaxConfig.adjustedMinRelPercent then
-      adjustMin = minMaxConfig.adjustedMinRelPercent * (not issecretvalue(duration) and duration or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      adjustMin = minMaxConfig.adjustedMinRelPercent * duration
     else
       adjustMin = 0
     end
@@ -535,15 +535,15 @@ local function UpdateProgressFromState(self, minMaxConfig, state, progressSource
     if minMaxConfig.adjustedMax then
       max = minMaxConfig.adjustedMax
     elseif minMaxConfig.adjustedMaxRelPercent then
-      max = minMaxConfig.adjustedMaxRelPercent * (not issecretvalue(duration) and duration or 1) -- [MIDNIGHT EDIT] checking for secret values.
+      max = minMaxConfig.adjustedMaxRelPercent * duration
     else
       max = duration
     end
 
     self.minProgress, self.maxProgress = adjustMin, max
     self.progressType = "timed"
-    self.duration = issecretvalue(max) and max or max - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
-    self.expirationTime = not issecretvalue(startTime) and not issecretvalue(self.duration) and startTime + adjustMin + self.duration or startTime -- [MIDNIGHT EDIT] checking for secret values.
+    self.duration = max - adjustMin
+    self.expirationTime = startTime + adjustMin + self.duration
     self.modRate = nil
     self.inverse = true
     self.paused = false
@@ -593,7 +593,7 @@ local function UpdateProgressFromManual(self, minMaxConfig, state, value, total)
   if minMaxConfig.adjustedMin then
     adjustMin = minMaxConfig.adjustedMin
   elseif minMaxConfig.adjustedMinRelPercent then
-    adjustMin = minMaxConfig.adjustedMinRelPercent * (not issecretvalue(total) and total or 1) -- [MIDNIGHT EDIT] checking for secret values.
+    adjustMin = minMaxConfig.adjustedMinRelPercent * total
   else
     adjustMin = 0
   end
@@ -601,14 +601,14 @@ local function UpdateProgressFromManual(self, minMaxConfig, state, value, total)
   if minMaxConfig.adjustedMax then
     max = minMaxConfig.adjustedMax
   elseif minMaxConfig.adjustedMaxRelPercent then
-    max = minMaxConfig.adjustedMaxRelPercent * (not issecretvalue(total) and total or 1) -- [MIDNIGHT EDIT] checking for secret values.
+    max = minMaxConfig.adjustedMaxRelPercent * total
   else
     max = total
   end
   self.minProgress, self.maxProgress = adjustMin, max
   self.progressType = "static"
-  self.value = issecretvalue(value) and value or value - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
-  self.total = issecretvalue(max) and max or max - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
+  self.value = value - adjustMin
+  self.total = max - adjustMin
   if self.UpdateValue then
     self:UpdateValue()
   end
@@ -931,14 +931,14 @@ function Private.regionPrototype.AddSetDurationInfo(region, uid)
         local adjustMin = region.adjustedMin or 0;
         local max = self.adjustedMax or expirationTime
         region.progressType = "static"
-        region.value = issecretvalue(duration) and duration or duration - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
-        region.total = issecretvalue(max) and max or max - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
+        region.value = duration - adjustMin
+        region.total = max - adjustMin
         region:UpdateValue()
       else
         local adjustMin = self.adjustedMin or 0;
         self.progressType = "timed"
-        self.duration = issecretvalue(duration) and duration or (duration ~= 0 and self.adjustedMax or duration) - adjustMin
-        self.expirationTime = issecretvalue(expirationTime) and expirationTime or expirationTime - adjustMin -- [MIDNIGHT EDIT] checking for secret values.
+        self.duration = (duration ~= 0 and self.adjustedMax or duration) - adjustMin
+        self.expirationTime = expirationTime - adjustMin
         self.modRate = nil
         self.inverse = inverse
         self.paused = false
