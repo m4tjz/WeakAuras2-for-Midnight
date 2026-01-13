@@ -7,7 +7,7 @@ local L = WeakAuras.L
 
 local optionsVersion = "@project-version@"
 --@debug@
-optionsVersion = "Dev"
+optionsVersion = "0.1.1" -- [MIDNIGHT EDIT] changing version.
 --@end-debug@
 
 if optionsVersion ~= WeakAuras.versionString then

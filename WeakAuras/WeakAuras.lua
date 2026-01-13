@@ -5396,6 +5396,7 @@ function Private.ParseTextStr(textStr, symbolCallback)
   if not textStr then
     return
   end
+  if issecretvalue(textStr) then return textStr end -- [MIDNIGHT EDIT] checking for secret values.
   local endPos = textStr:len();
   local currentPos = 1 -- Position of the "cursor"
   local state = 0
@@ -6191,6 +6192,7 @@ end
 ---@param input any
 ---@return number|nil number
 function WeakAuras.SafeToNumber(input)
+  if issecretvalue(input) then return input end -- [MIDNIGHT EDIT] checking for secret values.
   local nr = tonumber(input)
   return nr and (nr < 2147483648 and nr > -2147483649) and nr or nil
 end
@@ -6340,6 +6342,7 @@ function Private.ExecEnv.ParseNameCheck(name)
     realm = {},
     full = {},
     AddMatch = function(self, input, start, last)
+	  if issecretvalue(input) then return end -- [MIDNIGHT EDIT] checking for secret values.
       local match = strtrim(input:sub(start, last))
 
       -- state: 1: In name
@@ -6392,14 +6395,14 @@ function Private.ExecEnv.ParseNameCheck(name)
       end
     end,
     Check = function(self, name, realm)
-      if not name or not realm then
+      if not name or issecretvalue(name) or not realm then -- [MIDNIGHT EDIT] checking for secret values.
         return false
       end
       return self.name[name] or self.realm[realm] or self.full[name .. "-" .. realm]
     end
   }
 
-  if not name then return end
+  if not name or issecretvalue(name) then return end -- [MIDNIGHT EDIT] checking for secret values.
   local start = 1
   local last = name:find(',', start, true)
 
@@ -6525,10 +6528,11 @@ function Private.ExecEnv.CreateSpellChecker()
     names = {},
     spellIds = {},
     AddName = function(self, name)
+	  if issecretvalue(name) then return end -- [MIDNIGHT EDIT] checking for secret values.
       local spellId = tonumber(name)
       if spellId then
         name = Private.ExecEnv.GetSpellName(spellId)
-        if name then
+        if not issecretvalue(name) and name then -- [MIDNIGHT EDIT] checking for secret values.
           self.names[name] = true
         end
       else
@@ -6536,15 +6540,17 @@ function Private.ExecEnv.CreateSpellChecker()
       end
     end,
     AddExact = function(self, spellId)
+	  if issecretvalue(spellId) then return end -- [MIDNIGHT EDIT] checking for secret values.
       spellId = tonumber(spellId)
       self.spellIds[spellId] = true
     end,
     Check = function(self, spellId)
-      if spellId then
+      if not issecretvalue(spellId) and spellId then -- [MIDNIGHT EDIT] checking for secret values.
         return self.spellIds[spellId] or self.names[Private.ExecEnv.GetSpellName(spellId)]
       end
     end,
     CheckName = function(self, name)
+	  if issecretvalue(spellId) then return end -- [MIDNIGHT EDIT] checking for secret values.
       return self.names[name]
     end
   }

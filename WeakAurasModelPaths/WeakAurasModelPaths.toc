@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001
 ## Title: WeakAuras Model Paths
 ## Author: The WeakAuras Team
-## Version: @project-version@
+## Version: 0.1.1
 ## IconTexture: Interface\AddOns\WeakAuras\Media\Textures\icon.blp
 ## Notes: Model paths for WeakAuras
 ## Notes-esES: Las rutas de modelos para WeakAuras

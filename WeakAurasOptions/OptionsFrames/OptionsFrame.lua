@@ -107,7 +107,7 @@ function OptionsPrivate.CreateFrame()
   frame.Bg.colorTexture = {r, g, b, 0.8}
 
   function OptionsPrivate.SetTitle(title)
-    local text = "WeakAuras " .. WeakAuras.versionString
+    local text = "|cffff0000UNOFFICIAL|r WeakAuras for |cff8040ffMidnight|r " .. WeakAuras.versionString -- [MIDNIGHT EDIT] added to the title.
     if title and title ~= "" then
       text = ("%s - %s"):format(text, title)
     end
