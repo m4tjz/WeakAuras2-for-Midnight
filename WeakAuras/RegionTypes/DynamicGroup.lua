@@ -208,12 +208,14 @@ function WeakAuras.SortGreaterLast(a, b)
     return type(a) > type(b)
   end
   if type(a) == "number" then
+    if issecretvalue(a) or issecretvalue(b) then return end -- [MIDNIGHT EDIT] checking for secret values.
     if abs(b - a) < 0.001 then
       return nil
     else
       return a < b
     end
   elseif type(a) == "string" then
+    if issecretvalue(a) or issecretvalue(b) then return end -- [MIDNIGHT EDIT] checking for secret values.
     return a < b
   else
     return nil
