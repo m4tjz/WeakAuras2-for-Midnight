@@ -144,6 +144,7 @@ function CompressDisplay(data, version)
 end
 
 local function filterFunc(_, event, msg, player, l, cs, t, flag, channelId, ...)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   if flag == "GM" or flag == "DEV" or (event == "CHAT_MSG_CHANNEL" and type(channelId) == "number" and channelId > 0) then
     return
   end
@@ -229,6 +230,7 @@ local tooltipLoading;
 local receivedData;
 
 hooksecurefunc("SetItemRef", function(link, text)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   if(link == "garrmission:weakauras") then
     local _, _, characterName, displayName = text:find("|Hgarrmission:weakauras|h|cFF8800FF%[([^%s]+) |r|cFF8800FF%- (.*)%]|h");
     if(characterName and displayName) then
@@ -604,6 +606,7 @@ end
 
 local safeSenders = {}
 function RequestDisplay(characterName, displayName)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   local characterNameAmbiguate = Ambiguate(characterName, "none")
   safeSenders[characterName] = true
   safeSenders[characterNameAmbiguate] = true
@@ -632,6 +635,7 @@ function TransmitError(errorMsg, characterName)
 end
 
 function TransmitDisplay(id, characterName, version)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   local encoded = Private.DisplayToString(id);
   if(encoded ~= "") then
     if version == 2  then
@@ -657,6 +661,7 @@ function TransmitDisplay(id, characterName, version)
 end
 
 local function HandleProgressComm(prefix, message, distribution, sender)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   if tooltipLoading and ItemRefTooltip:IsVisible() and safeSenders[sender] then
     receivedData = true;
     local done, total, displayName = strsplit(" ", message, 3)
@@ -684,6 +689,7 @@ local function HandleProgressComm(prefix, message, distribution, sender)
 end
 
 local function HandleComm(prefix, message, distribution, sender)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   local linkValidityDuration = 60 * 5
   local safeSender = safeSenders[sender]
   local validLink = false

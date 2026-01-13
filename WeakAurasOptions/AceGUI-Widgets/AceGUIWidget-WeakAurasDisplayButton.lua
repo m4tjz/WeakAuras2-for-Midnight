@@ -486,6 +486,7 @@ local methods = {
         end
         self:ReloadTooltip();
       elseif(IsShiftKeyDown()) then
+        if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
         local editbox = GetCurrentKeyBoardFocus();
         if(editbox) then
           if (not fullName) then

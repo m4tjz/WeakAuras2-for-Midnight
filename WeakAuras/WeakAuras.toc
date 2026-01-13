@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001
 ## Title: WeakAuras
 ## Author: The WeakAuras Team
-## Version: 0.1.1
+## Version: 0.1.2
 ## IconTexture: Interface\AddOns\WeakAuras\Media\Textures\icon.blp
 ## X-Flavor: Mainline
 ## Notes: A powerful, comprehensive utility for displaying graphics and information based on buffs, debuffs, and other triggers.
@@ -12,10 +12,6 @@
 ## Notes-zhTW: 一個強大且全面實用的顯示圖形和訊息基於增益，減益和其它觸發。
 ## X-Category: Interface Enhancements
 ## Globe-Post: WeakAurasOptions, WeakAurasModelPaths, WeakAurasTemplates
-## X-Website: https://www.curseforge.com/wow/addons/weakauras
-## X-Curse-Project-ID: 65387
-## X-WoWI-ID: 24910
-## X-Wago-ID: VBNBxKx5
 ## DefaultState: Enabled
 ## LoadOnDemand: 0
 ## SavedVariables: WeakAurasSaved

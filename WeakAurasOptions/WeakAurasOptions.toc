@@ -1,7 +1,7 @@
 ## Interface: 120000, 120001
 ## Title: WeakAuras Options
 ## Author: The WeakAuras Team
-## Version: 0.1.1
+## Version: 0.1.2
 ## IconTexture: Interface\AddOns\WeakAuras\Media\Textures\icon.blp
 ## Notes: Options for WeakAuras
 ## Notes-esES: Opciones para WeakAuras

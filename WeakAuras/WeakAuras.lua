@@ -3566,6 +3566,7 @@ function Private.ReleaseClone(id, cloneId, regionType)
 end
 
 function Private.HandleChatAction(message_type, message, message_dest, message_dest_isunit, message_channel, r, g, b, region, customCache, when, formatters)
+  if C_ChatInfo.InChatMessagingLockdown() then return end -- [MIDNIGHT EDIT] chat is on lockdown.
   local useHiddenStates = when == "finish"
   if (message:find('%%')) then
     message = Private.ReplacePlaceHolders(message, region, customCache, useHiddenStates, formatters);
