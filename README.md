@@ -2,9 +2,6 @@
 
 # WeakAuras
 
-[![Build Status](https://github.com/WeakAuras/WeakAuras2/workflows/CI/badge.svg)](https://github.com/WeakAuras/WeakAuras2/actions?workflow=CI)
-[![WeakAuras on Discord](https://img.shields.io/badge/discord-weakauras-738bd7.svg?style=flat)](https://discord.gg/weakauras) [![Patreon](https://img.shields.io/badge/patreon-donate-orange.svg)](https://www.patreon.com/weakauras)
-
 ![Logo](https://i.imgur.com/wwbxeCG.jpeg)
 </div>
 
