@@ -259,6 +259,8 @@ local funcs = {
     local width = self.parentMajorSize
 
     local minValue, maxValue = self.parent:GetMinMaxProgress()
+	minValue = issecretvalue(minValue) and 0 or minValue -- [MIDNIGHT EDIT] replace secret values.
+	maxValue = issecretvalue(maxValue) and 1 or maxValue -- [MIDNIGHT EDIT] replace secret values.
     local valueRange = maxValue - minValue
     local inverse = self.inverse_direction
 

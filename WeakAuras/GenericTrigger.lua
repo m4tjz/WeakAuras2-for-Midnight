@@ -185,21 +185,21 @@ function TestForLongString(trigger, arg)
   local caseInsensitive = arg.canBeCaseInsensitive and trigger[name .. "_caseInsensitive"]
   if(trigger[name.."_operator"] == "==") then
     if caseInsensitive then
-      test = ("(%s and (%s):lower() == (%s):lower())"):format(name, name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s and (%s):lower() == (%s):lower())"):format(name, Private.QuotedString(needle), name, name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     else
-      test = ("(%s == %s)"):format(name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s == %s)"):format(name, Private.QuotedString(needle), name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     end
   elseif(trigger[name.."_operator"] == "find('%s')") then
     if caseInsensitive then
-      test = ("(%s and %s:lower():find((%s):lower(), 1, true))"):format(name, name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s and %s:lower():find((%s):lower(), 1, true))"):format(name, Private.QuotedString(needle), name, name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     else
-      test = ("(%s and %s:find(%s, 1, true))"):format(name, name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s and %s:find(%s, 1, true))"):format(name, Private.QuotedString(needle), name, name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     end
   elseif(trigger[name.."_operator"] == "match('%s')") then
     if caseInsensitive then
-      test = ("(%s and %s:lower():match((%s):lower()))"):format(name, name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s and %s:lower():match((%s):lower()))"):format(name, Private.QuotedString(needle), name, name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     else
-      test = ("(%s and %s:match(%s))"):format(name, name, Private.QuotedString(needle))
+      test = ("not issecretvalue(%s) and not issecretvalue(%s) and (%s and %s:match(%s))"):format(name, Private.QuotedString(needle), name, name, Private.QuotedString(needle)) -- [MIDNIGHT EDIT] checking for secret values.
     end
   end
   return test;

@@ -689,7 +689,7 @@ local function CreateFunctionCache(exec_env)
         local indextest = 1
         for line in string:gmatch('[^\r\n]+') do
       	  indextest = indextest+1
-	  	  if abs(indextest-31) < 5 then
+	  	  if abs(indextest-11) < 5 then
 	  	    print(indextest,line)
 	  	  end
         end

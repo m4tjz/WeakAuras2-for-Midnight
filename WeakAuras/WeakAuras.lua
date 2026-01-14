@@ -1526,7 +1526,7 @@ local function StoreBossGUIDs()
     for i = 1, 10 do
       if (UnitExists ("boss" .. i)) then
         local guid = UnitGUID ("boss" .. i)
-        if (guid) then
+        if not issecretvalue(guid) and (guid) then -- [MIDNIGHT EDIT] checking for secret values.
           WeakAuras.CurrentEncounter.boss_guids [guid] = true
         end
       end
