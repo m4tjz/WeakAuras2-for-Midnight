@@ -8,8 +8,8 @@ local OptionsPrivate = select(2, ...)
 local pairs = pairs
 
 -- WoW APIs
-local CreateFrame, IsMouseButtonDown, SetCursor, GetMouseFocus, MouseIsOver, ResetCursor
-  = CreateFrame, IsMouseButtonDown, SetCursor, GetMouseFocus, MouseIsOver, ResetCursor
+local CreateFrame, IsMouseButtonDown, SetCursor, GetMouseFoci, ResetCursor
+  = CreateFrame, IsMouseButtonDown, SetCursor, GetMouseFoci, ResetCursor
 
 ---@class WeakAuras
 local WeakAuras = WeakAuras
@@ -64,9 +64,7 @@ function OptionsPrivate.StartFrameChooser(data, path)
       SetCursor("CAST_CURSOR");
 
       local focus
-      if GetMouseFocus then
-        focus = GetMouseFocus()
-      elseif GetMouseFoci then
+      if GetMouseFoci then
         local foci = GetMouseFoci()
         focus = foci[1] or nil
       end
@@ -78,7 +76,7 @@ function OptionsPrivate.StartFrameChooser(data, path)
           focusName = nil;
           local focusIsGroup = false;
           for id, regionData in pairs(OptionsPrivate.Private.regions) do
-            if(regionData.region and regionData.region:IsVisible() and MouseIsOver(regionData.region)) then
+            if(regionData.region and regionData.region:IsVisible() and regionData.region:IsMouseOver()) then
               local isGroup = regionData.regionType == "group" or regionData.regionType == "dynamicgroup";
               if (not focusName or (not isGroup and focusIsGroup)) then
                 focus = regionData.region;
